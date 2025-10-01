@@ -1,0 +1,69 @@
+// Función principal para inicializar y configurar las vistas del juego
+function initializeGameViews() {
+    
+    // =================================================================
+    // 1. CREACIÓN DEL CONTENEDOR PRINCIPAL
+    // =================================================================
+    const container = document.createElement('div');
+    container.id = 'gameview-container'; // Añadimos un ID para CSS
+    
+    // CSS para centrar y usar Flexbox (diseño responsivo)
+    container.style.cssText = `
+        position: fixed; 
+        top: 50%; 
+        left: 50%; 
+        transform: translate(-50%, -50%); /* Centrado perfecto */
+        display: flex; 
+        gap: 20px; /* Espacio entre las dos vistas */
+        z-index: -1; /* Mantenemos el contenedor detrás de su UI principal */
+    `;
+
+    // =================================================================
+    // 2. CREACIÓN DE LAS VISTAS DEL JUEGO (x-cfx-game-view)
+    // =================================================================
+    
+    // Función de ayuda para crear un objeto 'game-view'
+    const createGameView = (id) => {
+        const screen = document.createElement('object');
+        screen.type = 'application/x-cfx-game-view';
+        screen.id = id;
+        
+        // La clave aquí: para lograr el efecto de desenfoque, 
+        // usted debe aplicar el 'filter: blur()' a este elemento 
+        // a través de CSS o JS.
+        screen.style.filter = 'blur(15px)'; // Aplicamos el desenfoque (blur) directamente al elemento
+        
+        return screen;
+    };
+
+    const leftScreen = createGameView('left-game-view');
+    const rightScreen = createGameView('right-game-view');
+    
+    container.appendChild(leftScreen);
+    container.appendChild(rightScreen);
+    document.body.appendChild(container);
+
+    // =================================================================
+    // 3. LÓGICA DE REDIMENSIONAMIENTO (RESPONSIVO)
+    // =================================================================
+    
+    const resizeGameViews = () => {
+        // Calculamos un tercio del ancho y alto total de la ventana
+        const newWidth = Math.floor(window.innerWidth / 3);
+        const newHeight = Math.floor(window.innerHeight / 3);
+        
+        // Aplicamos el nuevo tamaño a ambas vistas
+        const sizeStyle = `${newWidth}px`;
+        leftScreen.style.width = rightScreen.style.width = sizeStyle;
+        
+        const heightStyle = `${newHeight}px`;
+        leftScreen.style.height = rightScreen.style.height = heightStyle;
+    };
+
+    // Aplicar el tamaño inicial y configurar el evento de redimensionamiento
+    resizeGameViews();
+    window.addEventListener('resize', resizeGameViews);
+}
+
+// Inicializar la función al cargar el script
+initializeGameViews();
