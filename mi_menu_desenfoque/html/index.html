@@ -13,4 +13,39 @@
     <script src="app.js"></script> 
 </body>
 </html>
+<script>
+    // =================================================================
+    // CÓDIGO AÑADIDO: FUNCIÓN DE ARRASTRE (DRAG)
+    // =================================================================
+    const menu = document.querySelector('.menu-container');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    if (menu) {
+        menu.addEventListener('mousedown', (e) => {
+            // Solo permitir arrastrar si se presiona la cabecera del menú (ej: h1)
+            if (e.target.tagName === 'H1') {
+                isDragging = true;
+                offsetX = e.clientX - menu.getBoundingClientRect().left;
+                offsetY = e.clientY - menu.getBoundingClientRect().top;
+                menu.style.cursor = 'grabbing'; // Cambia cursor al arrastrar
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            // Calcula la nueva posición del menú
+            menu.style.left = e.clientX - offsetX + 'px';
+            menu.style.top = e.clientY - offsetY + 'px';
+            menu.style.transform = 'none'; // Desactiva el centrado CSS
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (menu) {
+                menu.style.cursor = 'default';
+            }
+        });
+    }
+</script>
 
