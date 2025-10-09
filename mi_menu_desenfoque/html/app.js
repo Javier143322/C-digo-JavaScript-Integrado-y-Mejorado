@@ -106,3 +106,15 @@ window.addEventListener('message', function (event) {
         // Puedes añadir más acciones aquí si tu menú crece
     }
 });
+     // Código añadido para debugging (confirma que el JS está listo)
+    console.log("GameViewManager y lógica de UI cargados correctamente.");
+    // Envía un mensaje a Lua confirmando que la UI está lista para recibir datos
+    fetch(`https://${GetParentResourceName()}/uiReady`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify({
+            status: 'ok'
+        })
+    }).then(resp => resp.json()).then(resp => console.log(resp));
