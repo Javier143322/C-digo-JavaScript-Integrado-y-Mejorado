@@ -118,3 +118,8 @@ window.addEventListener('message', function (event) {
             status: 'ok'
         })
     }).then(resp => resp.json()).then(resp => console.log(resp));
+const GetParentResourceName = () => {
+    // Esta función simula la función Lua, devuelve el nombre del recurso
+    // Útil para la comunicación fetch con FiveM
+    return 'mi_menú_desenfoque'; 
+};
