@@ -68,3 +68,41 @@
 
 })(); 
 // <--- Aquí termina el código que ya tienes.
+// =================================================================
+// CÓDIGO AÑADIDO: ESCUCHA DE EVENTOS DE FIVEM (NUI CALLBACKS)
+// =================================================================
+
+window.addEventListener('message', function (event) {
+    const data = event.data;
+
+    // Aseguramos que el objeto 'gameViewManager' exista antes de usarlo
+    if (!window.gameViewManager) {
+        console.error('GameViewManager no inicializado.');
+        return; 
+    }
+
+    switch (data.action) {
+        case 'openMenu':
+            // Muestra el efecto blur de la vista del juego
+            window.gameViewManager.show(); 
+            // Muestra el contenedor principal del menú (usando la clase CSS)
+            document.querySelector('.menu-container').style.display = 'flex';
+            break;
+
+        case 'closeMenu':
+            // Oculta el efecto blur de la vista del juego
+            window.gameViewManager.hide(); 
+            // Oculta el contenedor principal del menú
+            document.querySelector('.menu-container').style.display = 'none';
+            break;
+
+        case 'setBlurLevel':
+            // Permite cambiar la intensidad del blur desde el juego
+            if (data.level) {
+                window.gameViewManager.setBlur(data.level);
+            }
+            break;
+            
+        // Puedes añadir más acciones aquí si tu menú crece
+    }
+});
