@@ -38,3 +38,23 @@ RegisterCommand('blurlow', function()
         level = '5px' -- Blur ligero
     })
 end)
+-- =================================================================
+-- CÓDIGO AÑADIDO: CERRAR MENÚ CON TECLA ESC
+-- =================================================================
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0) -- Espera mínima para optimización
+
+        -- Si el menú está abierto (foco en la UI) Y presionamos ESC (tecla 322)
+        if IsNuiFocused() and IsControlJustReleased(0, 322) then 
+            
+            -- Lógica para cerrar el menú (la misma que en el comando /togglemenu)
+            SendNUIMessage({
+                action = 'closeMenu'
+            })
+            SetNuiFocus(false, false)
+            isMenuOpen = false -- Asegúrate de que tu variable de estado se actualice
+        end
+    end
+end)
