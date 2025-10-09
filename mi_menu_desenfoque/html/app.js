@@ -63,3 +63,9 @@
     }
     const gameViewManagerInstance = new GameViewManager(2, '20px');
 })();
+
+    // Remueve o comenta este código de prueba:
+    // setInterval(toggleBlur, 5000); 
+
+})(); 
+// <--- Aquí termina el código que ya tienes.
