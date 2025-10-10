@@ -265,6 +265,33 @@
         ← Volver al Menú Principal
     </button>
 </div>
+<script>
+    // ... (Tu función showMenu() va aquí) ...
+
+    // =================================================================
+    // CÓDIGO AÑADIDO: LÓGICA DEL TOGGLE (ON/OFF)
+    // =================================================================
+    let isDiaOn = false;
+
+    /**
+     * Alterna el estado de una opción y notifica a Lua.
+     * @param {string} optionName - El nombre de la opción a cambiar (ej: 'siempre_dia').
+     */
+    function toggleOption(optionName) {
+        // Lógica específica para "Siempre Día"
+        if (optionName === 'siempre_dia') {
+            isDiaOn = !isDiaOn; // Cambia el estado (OFF -> ON o viceversa)
+            const button = document.getElementById('toggle-dia');
+            
+            // 1. Actualiza el aspecto visual del botón
+            button.textContent = isDiaOn ? 'ON' : 'OFF';
+            button.style.backgroundColor = isDiaOn ? '#28a745' : '#dc3545'; // Verde para ON, Rojo para OFF
+
+            // 2. Envía la acción a Lua
+            sendActionToLua('toggle_' + optionName, { estado: isDiaOn });
+        }
+    }
+</script>
 
 
 
