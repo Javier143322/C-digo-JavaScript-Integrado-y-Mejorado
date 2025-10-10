@@ -1,0 +1,63 @@
+/* =================================================================
+   BASE Y ESTILOS GLASSMORPHISM
+   ================================================================= */
+body {
+    /* Es crucial que el body no tenga fondo */
+    background-color: transparent; 
+    overflow: hidden; 
+    user-select: none;
+}
+
+.menu-container {
+    /* Posicionamiento y Dimensiones */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px; 
+    height: 550px; 
+    
+    /* Efecto Glassmorphism */
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px);
+    
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 25px;
+    display: none; /* Oculto por defecto, se muestra con JS */
+    flex-direction: column;
+    z-index: 100;
+}
+
+h1 {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+/* =================================================================
+   ANIMACIONES
+   ================================================================= */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+/* Clases para aplicar la animación */
+.menu-enter {
+    animation: fadeIn 0.3s forwards;
+}
+
+.menu-exit {
+    animation: fadeOut 0.3s forwards;
+}
