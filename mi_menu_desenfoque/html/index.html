@@ -204,6 +204,36 @@
         ← Volver al Menú Principal
     </button>
 </div>
+<script>
+    // ... (Tu función sendActionToLua() va aquí) ...
+
+    // =================================================================
+    // CÓDIGO AÑADIDO: FUNCIÓN DE CONTROL DE VISTAS
+    // =================================================================
+    const menuMain = document.querySelector('.menu-container'); // Tu menú principal
+    const menuSub = document.getElementById('submenu-opciones'); // Tu submenú
+
+    /**
+     * Muestra la vista de menú especificada y oculta las otras.
+     * @param {string} menuName - Nombre del menú a mostrar ('main' o 'submenu').
+     */
+    function showMenu(menuName) {
+        menuMain.style.display = 'none';
+        menuSub.style.display = 'none';
+
+        if (menuName === 'main') {
+            menuMain.style.display = 'flex';
+        } else if (menuName === 'submenu') {
+            menuSub.style.display = 'flex';
+        }
+        
+        // Aseguramos que el menú se centre si estamos en el modo animado
+        menuMain.style.transform = 'translate(-50%, -50%)'; 
+    }
+    
+    // Por defecto, muestra el menú principal al iniciar (puedes cambiar esto si quieres que empiece oculto)
+    // showMenu('main'); 
+</script>
 
 
 
