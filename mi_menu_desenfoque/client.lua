@@ -157,3 +157,22 @@ AddEventHandler('__cfx_nui:toggle_siempre_dia', function(data, cb)
     
     cb('ok') -- Confirma a la UI
 end)
+-- =================================================================
+-- CÓDIGO AÑADIDO: CALLBACK PARA RECIBIR MENSAJE DEL CHAT
+-- =================================================================
+
+RegisterNuiCallbackType('enviar_mensaje_chat')
+AddEventHandler('__cfx_nui:enviar_mensaje_chat', function(data, cb)
+    local mensaje = data.mensaje -- Captura el mensaje enviado desde JS
+
+    if mensaje and mensaje ~= '' then
+        -- Envía el mensaje al chat del juego (como un mensaje del sistema)
+        TriggerEvent('chat:addMessage', {
+            color = { 255, 165, 0 }, -- Color Naranja
+            args = { 'MENÚ UI', 'ha enviado: ' .. mensaje }
+        })
+        print('[MENÚ UI] Nuevo mensaje de la UI: ' .. mensaje)
+    end
+    
+    cb('ok') -- Confirma a la UI
+end)
