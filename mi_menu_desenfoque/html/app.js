@@ -1,4 +1,11 @@
+// Definimos la función para comunicación con FiveM al principio
+const GetParentResourceName = () => {
+    return 'mi_menú_desenfoque'; 
+};
 
+// =================================================================
+// FUNCIÓN AUTO-EJECUTABLE PARA MANTENER EL ÁMBITO LIMPIO
+// =================================================================
 (() => {
     class GameViewManager {
         constructor(numViews = 2, blurStrength = '20px') {
@@ -8,8 +15,12 @@
             this.VIEWS_ARRAY = [];
             this.CONTAINER = null;
             this.DEBOUNCE_TIME = 66; 
+            
+            // Aseguramos que la instancia esté en el objeto window
+            window.gameViewManager = this; 
             this.init();
         }
+        
         _createContainer() {
             const container = document.createElement('div');
             container.id = 'gameview-background-container';
@@ -24,11 +35,17 @@
                 width: 80vw; 
                 height: 80vh; 
                 pointer-events: none;
+                visibility: hidden; /* Oculto por defecto */
             `;
             this.CONTAINER = container;
             document.body.appendChild(container);
         }
+        
         _createViews() {
+            // Limpiar vistas anteriores si existen
+            this.VIEWS_ARRAY.forEach(view => view.remove());
+            this.VIEWS_ARRAY = [];
+
             for (let i = 0; i < this.NUM_VIEWS; i++) {
                 const screen = document.createElement('object');
                 screen.type = 'application/x-cfx-game-view'; 
@@ -44,71 +61,136 @@
                 this.CONTAINER.appendChild(screen);
             }
         }
+        
         _setupResizeListener() {
             const resizeHandler = () => {
                 if (this.resizeTimeout) {
                     clearTimeout(this.resizeTimeout);
                 }
                 this.resizeTimeout = setTimeout(() => {
-                    // Lógica optimizada
+                    // Lógica optimizada (mantener vacía por ahora)
                 }, this.DEBOUNCE_TIME);
             };
             window.addEventListener('resize', resizeHandler);
         }
+        
         init() {
             this._createContainer();
             this._createViews();
             this._setupResizeListener();
         }
-    }
-    const gameViewManagerInstance = new GameViewManager(2, '20px');
-})();
-    // Remueve o comenta este código de prueba:
-    // setInterval(toggleBlur, 5000); 
-
-})(); 
-// <--- Aquí termina el código que ya tienes.
-// =================================================================
-// CÓDIGO AÑADIDO: ESCUCHA DE EVENTOS DE FIVEM (NUI CALLBACKS)
-// =================================================================
-
-window.addEventListener('message', function (event) {
-    const data = event.data;
-
-    // Aseguramos que el objeto 'gameViewManager' exista antes de usarlo
-    if (!window.gameViewManager) {
-        console.error('GameViewManager no inicializado.');
-        return; 
-    }
-
-    switch (data.action) {
-        case 'openMenu':
-            // Muestra el efecto blur de la vista del juego
-            window.gameViewManager.show(); 
-            // Muestra el contenedor principal del menú (usando la clase CSS)
-            document.querySelector('.menu-container').style.display = 'flex';
-            break;
-
-        case 'closeMenu':
-            // Oculta el efecto blur de la vista del juego
-            window.gameViewManager.hide(); 
-            // Oculta el contenedor principal del menú
-            document.querySelector('.menu-container').style.display = 'none';
-            break;
-
-        case 'setBlurLevel':
-            // Permite cambiar la intensidad del blur desde el juego
-            if (data.level) {
-                window.gameViewManager.setBlur(data.level);
+        
+        // =================================================================
+        // FUNCIONES AÑADIDAS: CONTROL BÁSICO (show/hide)
+        // =================================================================
+        show() {
+            if (this.CONTAINER) {
+                this.CONTAINER.style.visibility = 'visible';
+                this.VIEWS_ARRAY.forEach(view => {
+                    view.style.filter = `blur(${this.BLUR_STRENGTH})`;
+                });
             }
-            break;
+        }
+
+        hide() {
+            if (this.CONTAINER) {
+                // Desactivar el blur antes de ocultar (para optimización)
+                this.VIEWS_ARRAY.forEach(view => {
+                    view.style.filter = 'none';
+                });
+                this.CONTAINER.style.visibility = 'hidden';
+            }
+        }
+        
+        // =================================================================
+        // FUNCIONES AÑADIDAS: CONTROL DINÁMICO (setBlurLevel y setNumViews)
+        // =================================================================
+        setBlurLevel(newLevel) {
+            this.VIEWS_ARRAY.forEach(view => {
+                view.style.filter = `blur(${newLevel})`;
+            });
+            this.BLUR_STRENGTH = newLevel;
+            console.log(`Blur cambiado a: ${newLevel}`);
+        }
+
+        setNumViews(newCount) {
+            if (newCount === this.NUM_VIEWS) return;
+
+            // 1. Eliminar el contenedor antiguo si existe
+            if (this.CONTAINER) {
+                this.CONTAINER.remove(); 
+            }
             
-        // Puedes añadir más acciones aquí si tu menú crece
+            // 2. Reiniciar variables y recrear
+            this.NUM_VIEWS = newCount;
+            this.VIEWS_ARRAY = [];
+            this._createContainer();
+            this._createViews();
+            
+            // 3. Mantener el estado de visibilidad si estaba visible
+            if (window.gameViewManager.CONTAINER && window.gameViewManager.CONTAINER.style.visibility === 'visible') {
+                this.show();
+            }
+            console.log(`Número de vistas cambiado a: ${newCount}`);
+        }
     }
-});
-     // Código añadido para debugging (confirma que el JS está listo)
+    
+    // Inicializar la instancia
+    new GameViewManager(2, '20px');
+
+    
+    // =================================================================
+    // CÓDIGO AÑADIDO: ESCUCHA DE EVENTOS DE FIVEM (NUI CALLBACKS)
+    // =================================================================
+    window.addEventListener('message', function (event) {
+        const data = event.data;
+
+        if (!window.gameViewManager) {
+            console.error('GameViewManager no inicializado.');
+            return; 
+        }
+
+        switch (data.action) {
+            case 'openMenu':
+                // Nota: La lógica de mostrar el menú principal se maneja en index.html
+                window.gameViewManager.show(); 
+                break;
+
+            case 'closeMenu':
+                // Nota: La lógica de ocultar el menú principal se maneja en index.html
+                window.gameViewManager.hide(); 
+                break;
+
+            case 'setBlurLevel':
+                if (data.level) {
+                    window.gameViewManager.setBlurLevel(data.level);
+                }
+                break;
+                
+            case 'changeViewCount':
+                if (data.count && typeof data.count === 'number') {
+                    window.gameViewManager.setNumViews(data.count);
+                }
+                break;
+                
+            case 'renderPlayerList':
+                // Caso para la próxima funcionalidad de lista dinámica
+                if (data.data && window.renderPlayerList) {
+                    window.renderPlayerList(data.data);
+                }
+                break;
+                
+            default:
+                // console.log(`Acción desconocida: ${data.action}`);
+                break;
+        }
+    });
+
+    // =================================================================
+    // CÓDIGO AÑADIDO: DEBUGGING Y CONFIRMACIÓN A LUA
+    // =================================================================
     console.log("GameViewManager y lógica de UI cargados correctamente.");
-    // Envía un mensaje a Lua confirmando que la UI está lista para recibir datos
+
     fetch(`https://${GetParentResourceName()}/uiReady`, {
         method: 'POST',
         headers: {
@@ -118,8 +200,5 @@ window.addEventListener('message', function (event) {
             status: 'ok'
         })
     }).then(resp => resp.json()).then(resp => console.log(resp));
-const GetParentResourceName = () => {
-    // Esta función simula la función Lua, devuelve el nombre del recurso
-    // Útil para la comunicación fetch con FiveM
-    return 'mi_menú_desenfoque'; 
-};
+
+})(); // <--- FIN DE LA FUNCIÓN AUTO-EJECUTABLE
