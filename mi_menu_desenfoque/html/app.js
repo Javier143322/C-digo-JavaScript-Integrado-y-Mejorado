@@ -16,12 +16,15 @@ const GetParentResourceName = () => {
             this.CONTAINER = null;
             this.DEBOUNCE_TIME = 66; 
             
-            // Aseguramos que la instancia esté en el objeto window
             window.gameViewManager = this; 
             this.init();
         }
         
         _createContainer() {
+            if (this.CONTAINER) {
+                this.CONTAINER.remove();
+            }
+
             const container = document.createElement('div');
             container.id = 'gameview-background-container';
             container.style.cssText = `
@@ -35,14 +38,13 @@ const GetParentResourceName = () => {
                 width: 80vw; 
                 height: 80vh; 
                 pointer-events: none;
-                visibility: hidden; /* Oculto por defecto */
+                visibility: hidden; 
             `;
             this.CONTAINER = container;
             document.body.appendChild(container);
         }
         
         _createViews() {
-            // Limpiar vistas anteriores si existen
             this.VIEWS_ARRAY.forEach(view => view.remove());
             this.VIEWS_ARRAY = [];
 
@@ -68,7 +70,7 @@ const GetParentResourceName = () => {
                     clearTimeout(this.resizeTimeout);
                 }
                 this.resizeTimeout = setTimeout(() => {
-                    // Lógica optimizada (mantener vacía por ahora)
+                    // Lógica optimizada 
                 }, this.DEBOUNCE_TIME);
             };
             window.addEventListener('resize', resizeHandler);
@@ -81,7 +83,7 @@ const GetParentResourceName = () => {
         }
         
         // =================================================================
-        // FUNCIONES AÑADIDAS: CONTROL BÁSICO (show/hide)
+        // FUNCIONES DE CONTROL (show/hide/setBlur/setNumViews)
         // =================================================================
         show() {
             if (this.CONTAINER) {
@@ -94,53 +96,41 @@ const GetParentResourceName = () => {
 
         hide() {
             if (this.CONTAINER) {
-                // Desactivar el blur antes de ocultar (para optimización)
                 this.VIEWS_ARRAY.forEach(view => {
                     view.style.filter = 'none';
                 });
-                this.CONTAINER.style.visibility = 'hidden';
+                setTimeout(() => {
+                    this.CONTAINER.style.visibility = 'hidden';
+                }, 300); 
             }
         }
         
-        // =================================================================
-        // FUNCIONES AÑADIDAS: CONTROL DINÁMICO (setBlurLevel y setNumViews)
-        // =================================================================
         setBlurLevel(newLevel) {
             this.VIEWS_ARRAY.forEach(view => {
                 view.style.filter = `blur(${newLevel})`;
             });
             this.BLUR_STRENGTH = newLevel;
-            console.log(`Blur cambiado a: ${newLevel}`);
         }
 
         setNumViews(newCount) {
             if (newCount === this.NUM_VIEWS) return;
 
-            // 1. Eliminar el contenedor antiguo si existe
-            if (this.CONTAINER) {
-                this.CONTAINER.remove(); 
-            }
-            
-            // 2. Reiniciar variables y recrear
             this.NUM_VIEWS = newCount;
             this.VIEWS_ARRAY = [];
             this._createContainer();
             this._createViews();
             
-            // 3. Mantener el estado de visibilidad si estaba visible
             if (window.gameViewManager.CONTAINER && window.gameViewManager.CONTAINER.style.visibility === 'visible') {
                 this.show();
             }
-            console.log(`Número de vistas cambiado a: ${newCount}`);
         }
     }
     
-    // Inicializar la instancia
     new GameViewManager(2, '20px');
 
     
     // =================================================================
-    // CÓDIGO AÑADIDO: ESCUCHA DE EVENTOS DE FIVEM (NUI CALLBACKS)
+    // ESCUCHA DE EVENTOS DE FIVEM (NUI CALLBACKS)
     // =================================================================
     window.addEventListener('message', function (event) {
         const data = event.data;
@@ -152,12 +142,10 @@ const GetParentResourceName = () => {
 
         switch (data.action) {
             case 'openMenu':
-                // Nota: La lógica de mostrar el menú principal se maneja en index.html
                 window.gameViewManager.show(); 
                 break;
 
             case 'closeMenu':
-                // Nota: La lógica de ocultar el menú principal se maneja en index.html
                 window.gameViewManager.hide(); 
                 break;
 
@@ -174,20 +162,15 @@ const GetParentResourceName = () => {
                 break;
                 
             case 'renderPlayerList':
-                // Caso para la próxima funcionalidad de lista dinámica
                 if (data.data && window.renderPlayerList) {
                     window.renderPlayerList(data.data);
                 }
-                break;
-                
-            default:
-                // console.log(`Acción desconocida: ${data.action}`);
                 break;
         }
     });
 
     // =================================================================
-    // CÓDIGO AÑADIDO: DEBUGGING Y CONFIRMACIÓN A LUA
+    // DEBUGGING Y CONFIRMACIÓN A LUA
     // =================================================================
     console.log("GameViewManager y lógica de UI cargados correctamente.");
 
@@ -201,4 +184,4 @@ const GetParentResourceName = () => {
         })
     }).then(resp => resp.json()).then(resp => console.log(resp));
 
-})(); // <--- FIN DE LA FUNCIÓN AUTO-EJECUTABLE
+})(); 
