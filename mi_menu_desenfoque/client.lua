@@ -122,3 +122,12 @@ AddEventHandler('__cfx_nui:ejecutar_accion_uno', function(data, cb)
     -- Confirma la recepción a la UI
     cb('ok') 
 end)
+<div class="menu-container" id="submenu-opciones" style="display: none;">
+    <h1>Submenú: Opciones</h1>
+    <p>Esta es una vista diferente de opciones. Usa el botón de atrás para regresar.</p>
+
+    <button onclick="showMenu('main')" 
+        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 15px;">
+        ← Volver al Menú Principal
+    </button>
+</div>
