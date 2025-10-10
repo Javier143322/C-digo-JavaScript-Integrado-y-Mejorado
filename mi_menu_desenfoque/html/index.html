@@ -363,4 +363,33 @@
         ← Volver al Menú Principal
     </button>
 </div>
+<script>
+    // ... (Tu función sendChatMessage() va aquí) ...
+
+    // =================================================================
+    // CÓDIGO AÑADIDO: LÓGICA DEL SLIDER
+    // =================================================================
+
+    /**
+     * Actualiza el valor mostrado junto al slider.
+     * @param {string} value - El valor actual del slider.
+     */
+    function updateSliderValue(value) {
+        document.getElementById('slider-valor').textContent = parseFloat(value).toFixed(1);
+    }
+
+    /**
+     * Envía el valor final del slider a Lua (se activa al soltar el botón).
+     * @param {string} value - El valor final seleccionado en el slider.
+     */
+    function sendSliderValue(value) {
+        const finalValue = parseFloat(value);
+        
+        // Usa la función de comunicación existente, con un nuevo actionName
+        sendActionToLua('ajustar_velocidad', { velocidad: finalValue });
+        
+        console.log(`Velocidad enviada a Lua: ${finalValue}`);
+        // Opcional: Mensaje de confirmación
+    }
+</script>
 
