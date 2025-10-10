@@ -1,5 +1,4 @@
-
-fx_version 'bodacious' -- Versión moderna y compatible
+fx_version 'bodacious' -- Versión moderna
 games { 'gta5' }
 
 -- Información del recurso (puedes cambiar 'mi_menú_desenfoque' al nombre de tu carpeta)
@@ -8,12 +7,11 @@ resource_type 'menu' { name = 'Menú NUI Glassmorphism' }
 -- Archivo de interfaz de usuario
 ui_page 'html/index.html'
 
--- Archivos que el navegador de la UI puede acceder
+-- Archivos que el navegador de la UI puede acceder (AHORA INCLUYE style.css)
 files {
     'html/index.html',
     'html/app.js',
-    -- Si usaste CSS externo, descomenta la siguiente línea.
-    -- 'html/style.css', 
+    'html/style.css', 
 }
 
 -- Scripts del cliente (Lógica del juego)
