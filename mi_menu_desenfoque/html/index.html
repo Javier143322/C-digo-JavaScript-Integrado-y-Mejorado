@@ -320,5 +320,29 @@
         ← Volver al Menú Principal
     </button>
 </div>
+<script>
+    // ... (Tu función toggleOption() va aquí) ...
 
+    // =================================================================
+    // CÓDIGO AÑADIDO: ENVIAR DATOS DE INPUT A LUA
+    // =================================================================
+
+    function sendChatMessage() {
+        const inputField = document.getElementById('input-mensaje');
+        const messageText = inputField.value; // Captura el texto ingresado
+
+        if (messageText.trim() === '') {
+            alert('Por favor, escribe un mensaje.');
+            return;
+        }
+
+        // Usa la función de comunicación existente, pero con un nuevo actionName
+        sendActionToLua('enviar_mensaje_chat', { mensaje: messageText });
+        
+        // Limpiar el campo de entrada después de enviar
+        inputField.value = ''; 
+        
+        // Opcional: Cerrar el submenú o dar un feedback visual
+    }
+</script>
 
