@@ -128,6 +128,36 @@
     .menu-exit {
         animation: fadeOut 0.3s forwards;
     }
-</style>
+</style><script>
+    // =================================================================
+    // CÓDIGO AÑADIDO: GESTIÓN DE ANIMACIONES Y EVENTOS DE TECLADO
+    // =================================================================
+    
+    // Escucha eventos de la aplicación FiveM (NUI)
+    window.addEventListener('message', function(event) {
+        const data = event.data;
+        const menu = document.querySelector('.menu-container');
+
+        if (data.action === 'openMenu') {
+            menu.style.display = 'flex';
+            // Aplicar la animación de entrada
+            menu.classList.remove('menu-exit');
+            menu.classList.add('menu-enter');
+
+        } else if (data.action === 'closeMenu') {
+            // Aplicar la animación de salida
+            menu.classList.remove('menu-enter');
+            menu.classList.add('menu-exit');
+
+            // Esperar a que la animación termine antes de ocultar completamente
+            setTimeout(() => {
+                menu.style.display = 'none';
+            }, 300); // 300ms debe coincidir con la duración de la animación (0.3s)
+        }
+    });
+
+    // --- El código de Arrastre y Persistencia sigue aquí ---
+</script>
+
 
 
