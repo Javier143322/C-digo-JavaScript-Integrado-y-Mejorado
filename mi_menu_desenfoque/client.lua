@@ -98,3 +98,27 @@ Citizen.CreateThread(function()
         end
     end
 end)
+-- =================================================================
+-- CÓDIGO AÑADIDO: ESCUCHAR DATOS DE LA UI (NUI CALLBACKS)
+-- =================================================================
+
+RegisterNuiCallbackType('ejecutar_accion_uno')
+AddEventHandler('__cfx_nui:ejecutar_accion_uno', function(data, cb)
+    -- Lo que el juego hace cuando se pulsa el botón
+    
+    local message = data.message or 'No hay mensaje'
+    
+    print('----------------------------------------------------')
+    print('¡NUI CALLBACK RECIBIDO!')
+    print('Acción: ejecutar_accion_uno')
+    print('Mensaje desde la UI: ' .. message)
+    print('----------------------------------------------------')
+    
+    -- Ejemplo: Puedes hacer que el personaje parpadee al presionar el botón
+    Citizen.CreateThread(function()
+        SetFlash(0, 0, 500, 500, 500)
+    end)
+    
+    -- Confirma la recepción a la UI
+    cb('ok') 
+end)
