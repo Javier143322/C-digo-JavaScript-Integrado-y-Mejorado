@@ -212,3 +212,21 @@ local function notifyUI(message, type)
         type = type or 'success' -- Por defecto, es éxito
     })
 end
+-- MODIFICA ESTE BLOQUE EXISTENTE en client.lua
+
+AddEventHandler('__cfx_nui:toggle_siempre_dia', function(data, cb)
+    local estado = data.estado 
+    
+    -- (Tu lógica de activar/desactivar el NetworkOverrideClockTime va aquí)
+    
+    if estado then
+        -- Llama a la nueva función de notificación
+        notifyUI('Modo Siempre Día ACTIVADO.', 'success') 
+    else
+        notifyUI('Modo Siempre Día DESACTIVADO.', 'error') 
+    end
+    
+    cb('ok')
+end)
+
+-- Haz lo mismo en 'ejecutar_accion_uno' y 'ajustar_velocidad'.
