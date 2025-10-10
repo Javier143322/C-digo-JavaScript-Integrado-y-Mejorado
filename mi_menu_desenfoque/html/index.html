@@ -292,6 +292,33 @@
         }
     }
 </script>
+<div class="menu-container" id="submenu-opciones" style="display: none;">
+    <h1>Submenú: Opciones</h1>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <span>Modo Siempre Día</span>
+        <button id="toggle-dia" onclick="toggleOption('siempre_dia')"
+            style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            OFF
+        </button>
+    </div>
 
+    <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <label for="input-mensaje" style="color: #ccc; margin-bottom: 5px; display: block;">Enviar Mensaje al Chat:</label>
+        <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje aquí..."
+            style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background-color: rgba(0, 0, 0, 0.3); color: white; box-sizing: border-box;">
+        
+        <button onclick="sendChatMessage()"
+            style="width: 100%; background-color: #ffc107; color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+            Enviar Mensaje
+        </button>
+    </div>
+    <p style="margin-top: 15px;">Usa el botón de atrás para regresar.</p>
+
+    <button onclick="showMenu('main')" 
+        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
+        ← Volver al Menú Principal
+    </button>
+</div>
 
 
