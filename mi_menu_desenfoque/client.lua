@@ -200,3 +200,15 @@ AddEventHandler('__cfx_nui:ajustar_velocidad', function(data, cb)
     
     cb('ok') -- Confirma a la UI
 end)
+-- =================================================================
+-- CÓDIGO AÑADIDO: DISPARADOR DE NOTIFICACIONES DE LUA A LA UI
+-- =================================================================
+
+-- Función central para notificar a la UI
+local function notifyUI(message, type)
+    SendNUIMessage({
+        action = 'showNotification',
+        message = message,
+        type = type or 'success' -- Por defecto, es éxito
+    })
+end
