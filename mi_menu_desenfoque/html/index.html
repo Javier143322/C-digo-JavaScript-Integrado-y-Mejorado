@@ -234,6 +234,20 @@
     // Por defecto, muestra el menú principal al iniciar (puedes cambiar esto si quieres que empiece oculto)
     // showMenu('main'); 
 </script>
+<div class="menu-container">
+    <h1>Menú Principal</h1>
+    <p>El juego debe verse borroso detrás de mí.</p>
+    
+    <button onclick="sendActionToLua('ejecutar_accion_uno')" 
+        style="/* ... (los estilos CSS existentes) ... */">
+        Hacer Algo (Ejecuta en Lua)
+    </button>
+    
+    <button onclick="showMenu('submenu')"
+        style="background-color: #17a2b8; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+        Ir a Opciones
+    </button>
+</div>
 
 
 
