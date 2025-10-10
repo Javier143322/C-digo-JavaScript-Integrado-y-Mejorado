@@ -4,11 +4,11 @@
 
 -- Variable de estado global para controlar el menú
 local isMenuOpen = false
-local isDayModeActive = false -- Variable para el toggle de Siempre Día
-local currentSpeedMult = 1.0 -- Velocidad base del jugador
+local isDayModeActive = false 
+local currentSpeedMult = 1.0 
 
 -- =================================================================
--- FUNCIONES CENTRALES DE ENTRADA/SALIDA DE MENÚ (LIMPIO Y ÚNICO)
+-- FUNCIONES CENTRALES DE ENTRADA/SALIDA DE MENÚ
 -- =================================================================
 
 local function openMenu()
@@ -36,7 +36,7 @@ local function notifyUI(message, type)
 end
 
 -- =================================================================
--- HILO PRINCIPAL: COMANDOS Y TECLA ESC
+-- HILO PRINCIPAL: COMANDOS Y TECLA ESC (OPTIMIZADO)
 -- =================================================================
 
 -- 1. Comando /togglemenu
@@ -48,12 +48,11 @@ RegisterCommand('togglemenu', function()
     end
 end)
 
--- 2. Tecla ESC (Se ejecuta continuamente en el juego)
+-- 2. Tecla ESC (Optimizado con Wait(5))
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0) 
+        Citizen.Wait(5) 
 
-        -- Si el foco está en la UI (menú potencialmente abierto) Y se presiona ESC (tecla 322)
         if IsNuiFocused() and IsControlJustReleased(0, 322) then 
             if isMenuOpen then
                 closeMenu()
@@ -62,7 +61,7 @@ Citizen.CreateThread(function()
     end
 end)
 
--- 3. Comandos de ejemplo para cambiar el Blur (funcionalidad de la app.js)
+-- 3. Comandos de ejemplo para cambiar el Blur
 RegisterCommand('blurhigh', function()
     SendNUIMessage({
         action = 'setBlurLevel',
@@ -89,7 +88,6 @@ AddEventHandler('__cfx_nui:ejecutar_accion_uno', function(data, cb)
     Citizen.CreateThread(function()
         SetFlash(0, 0, 500, 500, 500)
     end)
-    
     notifyUI('Acción de parpadeo ejecutada con éxito.', 'success') 
     cb('ok') 
 end)
@@ -97,20 +95,18 @@ end)
 -- CALLBACK: Toggle de Siempre Día
 RegisterNuiCallbackType('toggle_siempre_dia')
 AddEventHandler('__cfx_nui:toggle_siempre_dia', function(data, cb)
-    isDayModeActive = data.estado -- Actualizamos la variable de estado
+    isDayModeActive = data.estado 
     
     if isDayModeActive then
-        -- Inicia el thread de loop SÓLO si está activado
         Citizen.CreateThread(function()
-            while isDayModeActive do -- El loop usa la variable global
-                Citizen.Wait(0)
-                NetworkOverrideClockTime(12, 0, 0) -- Fija la hora a las 12:00
+            while isDayModeActive do
+                Citizen.Wait(0) 
+                NetworkOverrideClockTime(12, 0, 0)
             end
-            ClearOverrideClockTime() -- Limpia la hora cuando el loop termina
+            ClearOverrideClockTime()
         end)
         notifyUI('Modo Siempre Día ACTIVADO.', 'success') 
     else
-        -- Simplemente limpia si se desactiva (el thread anterior terminará solo)
         ClearOverrideClockTime()
         notifyUI('Modo Siempre Día DESACTIVADO.', 'error') 
     end
@@ -143,7 +139,7 @@ AddEventHandler('__cfx_nui:ajustar_velocidad', function(data, cb)
     local playerPed = PlayerPedId()
 
     if velocidadFinal then
-        currentSpeedMult = velocidadFinal -- Guardamos el valor actual
+        currentSpeedMult = velocidadFinal
         local factorVelocidad = velocidadFinal * 1.5
         
         SetRunSpeedMult(playerPed, factorVelocidad)
@@ -155,24 +151,26 @@ AddEventHandler('__cfx_nui:ajustar_velocidad', function(data, cb)
     cb('ok')
 end)
 
--- =================================================================
--- CÓDIGO FINAL: LISTA DINÁMICA DE JUGADORES (Incompleto)
--- =================================================================
-
+-- CALLBACK: LISTA DINÁMICA DE JUGADORES (Recolección de datos real)
 RegisterNuiCallbackType('request_player_data')
 AddEventHandler('__cfx_nui:request_player_data', function(data, cb)
     local playersTable = {}
     
-    -- SIMULACIÓN DE DATOS (PARA PRUEBA)
-    for i = 1, 5 do
-        table.insert(playersTable, {
-            id = i,
-            name = "Jugador de Prueba " .. i,
-            ping = math.random(30, 100)
-        })
+    for _, playerId in ipairs(GetActivePlayers()) do
+        local ped = GetPlayerPed(playerId)
+        
+        if ped ~= 0 then 
+            local playerName = GetPlayerName(playerId)
+            local playerPing = GetPlayerPing(playerId)
+            
+            table.insert(playersTable, {
+                id = playerId,
+                name = playerName,
+                ping = playerPing
+            })
+        end
     end
     
-    -- Envía la lista al JS para que la dibuje
     SendNUIMessage({
         action = 'renderPlayerList', 
         data = playersTable
@@ -181,10 +179,26 @@ AddEventHandler('__cfx_nui:request_player_data', function(data, cb)
     cb('ok') 
 end)
 
--- =================================================================
--- HANDLER DE READY (Asegura que el menú esté listo antes de usarlo)
--- =================================================================
+-- CALLBACK: TELETRANSPORTE AL JUGADOR (NUEVA FUNCIÓN)
+RegisterNuiCallbackType('teleport_to_player')
+AddEventHandler('__cfx_nui:teleport_to_player', function(data, cb)
+    local targetId = data.targetId
+    local targetPed = GetPlayerPed(targetId)
+    
+    if DoesEntityExist(targetPed) then
+        local coords = GetEntityCoords(targetPed)
+        
+        SetEntityCoords(PlayerPedId(), coords.x + 1.0, coords.y + 1.0, coords.z + 1.0, false, false, false, true)
+        
+        notifyUI('Teletransporte exitoso.', 'success')
+    else
+        notifyUI('ERROR: Jugador no encontrado o fuera de rango.', 'error')
+    end
+    
+    cb('ok')
+end)
 
+-- HANDLER DE READY 
 RegisterNuiCallbackType('uiReady')
 AddEventHandler('__cfx_nui:uiReady', function(data, cb)
     print('----------------------------------------------------')
