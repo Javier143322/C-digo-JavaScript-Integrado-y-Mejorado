@@ -169,6 +169,32 @@
     style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 15px;">
     Hacer Algo
 </button>
+<script>
+    // ... (El código de Arrastre/Persistencia va aquí) ...
+
+    // =================================================================
+    // CÓDIGO AÑADIDO: FUNCIÓN PARA ENVIAR DATOS A LUA
+    // =================================================================
+    function sendActionToLua(actionName) {
+        // Usa la función fetch para enviar datos al script Lua
+        fetch(`https://${GetParentResourceName()}/${actionName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({
+                // Si necesitas enviar más datos, añádelos aquí (ej: 'valor': 50)
+                message: 'El usuario hizo clic en ' + actionName
+            })
+        }).then(response => response.json()).then(data => {
+            // Opcional: manejar la respuesta de Lua si la hay
+            // console.log('Respuesta de Lua:', data);
+        });
+
+        // Opcional: Cierra el menú automáticamente después de la acción
+        // window.gameViewManager.hide();
+    }
+</script>
 
 
 
