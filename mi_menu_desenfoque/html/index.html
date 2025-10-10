@@ -1,470 +1,378 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Menú FiveM Blur</title>
+    <title>Menú FiveM Blur Mejorado</title>
+    
+    <style>
+        body {
+            /* Es crucial que el body no tenga fondo */
+            background-color: transparent; 
+            overflow: hidden; 
+            user-select: none;
+        }
+
+        .menu-container {
+            /* Posicionamiento y Dimensiones */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px; 
+            height: 550px; 
+            
+            /* Efecto Glassmorphism */
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 25px;
+            display: none; /* Oculto por defecto, se muestra con JS */
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        h1 {
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        /* CÓDIGO AÑADIDO: ANIMACIONES DE APERTURA/CIERRE */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+
+        /* Clases para aplicar la animación */
+        .menu-enter {
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .menu-exit {
+            animation: fadeOut 0.3s forwards;
+        }
+    </style>
 </head>
 <body>
     
-    <div style="position: absolute; top: 10%; left: 10%; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px; border-radius: 8px; z-index: 10;">
+    <div id="notification-container" style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    ">
+        </div>
+
+    <div class="menu-container" id="menu-principal">
         <h1>Menú Principal</h1>
-        <p>El juego debe verse borroso detrás de mí.</p>
+        <p style="margin-bottom: 20px;">El juego debe verse borroso detrás de mí.</p>
+        
+        <button onclick="sendActionToLua('ejecutar_accion_uno')" 
+            style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 5px;">
+            Hacer Algo (Ejecuta en Lua)
+        </button>
+        
+        <button onclick="showMenu('opciones')"
+            style="background-color: #17a2b8; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+            Ir a Opciones
+        </button>
+
+        <button onclick="showMenu('jugadores')"
+            style="background-color: #3f88c5; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+            Ver Lista de Jugadores
+        </button>
     </div>
+
+    <div class="menu-container" id="submenu-opciones">
+        <h1>Submenú: Opciones</h1>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <span>Modo Siempre Día</span>
+            <button id="toggle-dia" onclick="toggleOption('siempre_dia')"
+                style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                OFF
+            </button>
+        </div>
+
+        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <label for="input-mensaje" style="color: #ccc; margin-bottom: 5px; display: block;">Enviar Mensaje al Chat:</label>
+            <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje aquí..."
+                style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background-color: rgba(0, 0, 0, 0.3); color: white; box-sizing: border-box;">
+            
+            <button onclick="sendChatMessage()"
+                style="width: 100%; background-color: #ffc107; color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                Enviar Mensaje
+            </button>
+        </div>
+        
+        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <label for="slider-velocidad" style="color: #ccc; margin-bottom: 5px; display: block;">Velocidad del Jugador: <span id="slider-valor">5.0</span></label>
+            
+            <input type="range" id="slider-velocidad" min="1.0" max="10.0" step="0.5" value="5.0"
+                oninput="updateSliderValue(this.value)"
+                onmouseup="sendSliderValue(this.value)"
+                style="width: 100%; height: 25px; cursor: pointer;">
+        </div>
+        
+        <button onclick="showMenu('main')" 
+            style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
+            ← Volver al Menú Principal
+        </button>
+    </div>
+
+    <div class="menu-container" id="submenu-jugadores">
+        <h1>Lista de Jugadores (Próxima Función)</h1>
+        
+        <p style="text-align: center; color: #aaa;">Esta vista se completará en el siguiente paso.</p>
+        
+        <button onclick="showMenu('main')" 
+            style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
+            ← Volver al Menú Principal
+        </button>
+    </div>
+
 
     <script src="app.js"></script> 
+
+    <script>
+        // Declaramos GetParentResourceName si no existe para que el fetch funcione
+        const GetParentResourceName = () => { return 'mi_menú_desenfoque'; };
+        
+        // CÓDIGO COMPLETO Y CORREGIDO DE ARRASTRE Y PERSISTENCIA (SIN DUPLICADOS)
+        const menu = document.getElementById('menu-principal');
+        const STORAGE_KEY = 'menuPosition';
+        let isDragging = false;
+        let offsetX, offsetY;
+        
+        // FUNCIÓN AÑADIDA: CARGAR POSICIÓN
+        function loadPosition() {
+            const savedPos = localStorage.getItem(STORAGE_KEY);
+            if (savedPos && menu) {
+                const { left, top } = JSON.parse(savedPos);
+                menu.style.left = left;
+                menu.style.top = top;
+                menu.style.transform = 'none'; // Desactiva el centrado CSS
+            }
+        }
+
+        if (menu) {
+            loadPosition();
+
+            menu.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'H1') {
+                    isDragging = true;
+                    offsetX = e.clientX - menu.getBoundingClientRect().left;
+                    offsetY = e.clientY - menu.getBoundingClientRect().top;
+                    menu.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                menu.style.left = e.clientX - offsetX + 'px';
+                menu.style.top = e.clientY - offsetY + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    // FUNCIÓN AÑADIDA: GUARDAR POSICIÓN
+                    const currentPos = {
+                        left: menu.style.left,
+                        top: menu.style.top
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPos));
+                }
+                isDragging = false;
+                if (menu) {
+                    menu.style.cursor = 'default';
+                }
+            });
+        }
+        
+        // =================================================================
+        // FUNCIÓN DE COMUNICACIÓN (sendActionToLua)
+        // =================================================================
+        function sendActionToLua(actionName, data = {}) {
+            fetch(`https://${GetParentResourceName()}/${actionName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                },
+                body: JSON.stringify(data)
+            });
+        }
+        
+        // =================================================================
+        // FUNCIÓN DE CONTROL DE VISTAS (showMenu) Y ANIMACIÓN
+        // =================================================================
+        const menuPrincipal = document.getElementById('menu-principal');
+        const menuOpciones = document.getElementById('submenu-opciones');
+        const menuJugadores = document.getElementById('submenu-jugadores');
+
+        function showMenu(menuName) {
+            const allMenus = [menuPrincipal, menuOpciones, menuJugadores];
+            
+            allMenus.forEach(m => { 
+                if(m) {
+                    // Cierre animado si ya estaba abierto
+                    if (m.style.display !== 'none') {
+                        m.classList.remove('menu-enter');
+                        m.classList.add('menu-exit');
+                        // Ocultar después de la animación de cierre
+                        setTimeout(() => m.style.display = 'none', 300);
+                    } else {
+                        m.style.display = 'none';
+                    }
+                }
+            });
+            
+            let targetMenu;
+            if (menuName === 'main') {
+                targetMenu = menuPrincipal;
+            } else if (menuName === 'opciones') {
+                targetMenu = menuOpciones;
+            } else if (menuName === 'jugadores') {
+                targetMenu = menuJugadores;
+            }
+
+            if (targetMenu) {
+                targetMenu.style.display = 'flex';
+                // Aplicar la animación de entrada
+                targetMenu.classList.remove('menu-exit');
+                targetMenu.classList.add('menu-enter');
+                // Asegurar que solo el menú principal use el transform original (si es necesario)
+                if (menuName === 'main' && targetMenu.style.transform === 'none') {
+                    // No hacer nada si fue movido por el usuario
+                } else if (menuName !== 'main') {
+                    targetMenu.style.transform = 'translate(-50%, -50%)';
+                }
+            }
+        }
+        
+        // =================================================================
+        // LÓGICA DE COMPONENTES: TOGGLE, INPUT, SLIDER
+        // =================================================================
+        let isDiaOn = false;
+
+        function toggleOption(optionName) {
+            if (optionName === 'siempre_dia') {
+                isDiaOn = !isDiaOn;
+                const button = document.getElementById('toggle-dia');
+                
+                button.textContent = isDiaOn ? 'ON' : 'OFF';
+                button.style.backgroundColor = isDiaOn ? '#28a745' : '#dc3545';
+
+                sendActionToLua('toggle_' + optionName, { estado: isDiaOn });
+                showNotification(`Modo Siempre Día ${isDiaOn ? 'ACTIVADO' : 'DESACTIVADO'}.`, 'success', 2000);
+            }
+        }
+
+        function sendChatMessage() {
+            const inputField = document.getElementById('input-mensaje');
+            const messageText = inputField.value;
+
+            if (messageText.trim() === '') {
+                showNotification('El mensaje no puede estar vacío.', 'error', 2000);
+                return;
+            }
+
+            sendActionToLua('enviar_mensaje_chat', { mensaje: messageText });
+            inputField.value = '';
+            showNotification('Mensaje enviado al chat.', 'success', 2000);
+        }
+        
+        function updateSliderValue(value) {
+            document.getElementById('slider-valor').textContent = parseFloat(value).toFixed(1);
+        }
+
+        function sendSliderValue(value) {
+            const finalValue = parseFloat(value);
+            sendActionToLua('ajustar_velocidad', { velocidad: finalValue });
+            showNotification(`Velocidad ajustada a ${finalValue.toFixed(1)}.`, 'success', 2000);
+        }
+        
+        // =================================================================
+        // SISTEMA DE NOTIFICACIONES (showNotification)
+        // =================================================================
+        window.showNotification = function(message, type, duration = 3000) {
+            const container = document.getElementById('notification-container');
+            const bgColor = type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)';
+            const titleText = type === 'success' ? 'Éxito' : 'Error';
+
+            const notification = document.createElement('div');
+            notification.innerHTML = `<strong>${titleText}:</strong> ${message}`;
+            
+            notification.style.cssText = `
+                padding: 12px 18px;
+                border-radius: 8px;
+                color: white;
+                font-family: sans-serif;
+                font-size: 14px;
+                max-width: 300px;
+                background: ${bgColor};
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                opacity: 0;
+                transform: translateX(100%);
+                transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            `;
+            
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 50);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 500); 
+            }, duration);
+        }
+
+        // =================================================================
+        // GESTIÓN DE ANIMACIONES Y EVENTOS (Listener principal)
+        // =================================================================
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            if (data.action === 'openMenu') {
+                showMenu('main'); // Abre el menú principal con animación
+            } else if (data.action === 'closeMenu') {
+                // Aplica la animación de salida a CUALQUIER menú que esté visible
+                const visibleMenu = document.querySelector('.menu-container[style*="display: flex"]');
+                if (visibleMenu) {
+                    visibleMenu.classList.remove('menu-enter');
+                    visibleMenu.classList.add('menu-exit');
+
+                    setTimeout(() => {
+                        visibleMenu.style.display = 'none';
+                    }, 300);
+                }
+            } else if (data.action === 'showNotification') {
+                // Recibe la notificación desde Lua
+                showNotification(data.message, data.type);
+            }
+        });
+    </script> 
 </body>
 </html>
-<script>
-    // =================================================================
-    // CÓDIGO AÑADIDO: FUNCIÓN DE ARRASTRE (DRAG)
-    // =================================================================
-    const menu = document.querySelector('.menu-container');
-    let isDragging = false;
-    let offsetX, offsetY;
-
-    if (menu) {
-        menu.addEventListener('mousedown', (e) => {
-            // Solo permitir arrastrar si se presiona la cabecera del menú (ej: h1)
-            if (e.target.tagName === 'H1') {
-                isDragging = true;
-                offsetX = e.clientX - menu.getBoundingClientRect().left;
-                offsetY = e.clientY - menu.getBoundingClientRect().top;
-                menu.style.cursor = 'grabbing'; // Cambia cursor al arrastrar
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            // Calcula la nueva posición del menú
-            menu.style.left = e.clientX - offsetX + 'px';
-            menu.style.top = e.clientY - offsetY + 'px';
-            menu.style.transform = 'none'; // Desactiva el centrado CSS
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            if (menu) {
-                menu.style.cursor = 'default';
-            }
-        });
-    }
-</script>
-<script>
-    // =================================================================
-    // CÓDIGO ACTUALIZADO: FUNCIÓN DE ARRASTRE (DRAG) CON GUARDADO DE POSICIÓN
-    // =================================================================
-    const menu = document.querySelector('.menu-container');
-    const STORAGE_KEY = 'menuPosition';
-    let isDragging = false;
-    let offsetX, offsetY;
-
-    // --- FUNCIÓN AÑADIDA: CARGAR POSICIÓN ---
-    function loadPosition() {
-        const savedPos = localStorage.getItem(STORAGE_KEY);
-        if (savedPos) {
-            const { left, top } = JSON.parse(savedPos);
-            menu.style.left = left;
-            menu.style.top = top;
-            menu.style.transform = 'none'; // Desactiva el centrado CSS
-        }
-    }
-
-    if (menu) {
-        // Cargar la posición al iniciar
-        loadPosition();
-
-        menu.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'H1') {
-                isDragging = true;
-                offsetX = e.clientX - menu.getBoundingClientRect().left;
-                offsetY = e.clientY - menu.getBoundingClientRect().top;
-                menu.style.cursor = 'grabbing';
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            menu.style.left = e.clientX - offsetX + 'px';
-            menu.style.top = e.clientY - offsetY + 'px';
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                // --- FUNCIÓN AÑADIDA: GUARDAR POSICIÓN ---
-                const currentPos = {
-                    left: menu.style.left,
-                    top: menu.style.top
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPos));
-            }
-            isDragging = false;
-            if (menu) {
-                menu.style.cursor = 'default';
-            }
-        });
-    }
-</script>
-<style>
-    /* ... (Todo tu código Glassmorphism CSS existente va aquí) ... */
-
-    /* =================================================================
-       CÓDIGO AÑADIDO: ANIMACIONES DE APERTURA/CIERRE
-       ================================================================= */
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    }
-
-    @keyframes fadeOut {
-        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-    }
-
-    /* Clases para aplicar la animación */
-    .menu-enter {
-        animation: fadeIn 0.3s forwards; /* 'forwards' mantiene el estado final */
-    }
-
-    .menu-exit {
-        animation: fadeOut 0.3s forwards;
-    }
-</style>
-<script>
-    // =================================================================
-    // CÓDIGO AÑADIDO: GESTIÓN DE ANIMACIONES Y EVENTOS DE TECLADO
-    // =================================================================
-    
-    // Escucha eventos de la aplicación FiveM (NUI)
-    window.addEventListener('message', function(event) {
-        const data = event.data;
-        const menu = document.querySelector('.menu-container');
-
-        if (data.action === 'openMenu') {
-            menu.style.display = 'flex';
-            // Aplicar la animación de entrada
-            menu.classList.remove('menu-exit');
-            menu.classList.add('menu-enter');
-
-        } else if (data.action === 'closeMenu') {
-            // Aplicar la animación de salida
-            menu.classList.remove('menu-enter');
-            menu.classList.add('menu-exit');
-
-            // Esperar a que la animación termine antes de ocultar completamente
-            setTimeout(() => {
-                menu.style.display = 'none';
-            }, 300); // 300ms debe coincidir con la duración de la animación (0.3s)
-        }
-    });
-
-    // --- El código de Arrastre y Persistencia sigue aquí ---
-</script>
-.menu-container {
-    /* ... otros estilos ... */
-    display: none; /* ¡Asegúrate de que esta línea esté aquí! */
-    /* ... otros estilos ... */
-}
-<button 
-    onclick="sendActionToLua('ejecutar_accion_uno')" 
-    style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 15px;">
-    Hacer Algo
-</button>
-<script>
-    // ... (El código de Arrastre/Persistencia va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: FUNCIÓN PARA ENVIAR DATOS A LUA
-    // =================================================================
-    function sendActionToLua(actionName) {
-        // Usa la función fetch para enviar datos al script Lua
-        fetch(`https://${GetParentResourceName()}/${actionName}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=UTF-8',
-            },
-            body: JSON.stringify({
-                // Si necesitas enviar más datos, añádelos aquí (ej: 'valor': 50)
-                message: 'El usuario hizo clic en ' + actionName
-            })
-        }).then(response => response.json()).then(data => {
-            // Opcional: manejar la respuesta de Lua si la hay
-            // console.log('Respuesta de Lua:', data);
-        });
-
-        // Opcional: Cierra el menú automáticamente después de la acción
-        // window.gameViewManager.hide();
-    }
-</script>
-<div class="menu-container" id="submenu-opciones" style="display: none;">
-    <h1>Submenú: Opciones</h1>
-    <p>Esta es una vista diferente de opciones. Usa el botón de atrás para regresar.</p>
-
-    <button onclick="showMenu('main')" 
-        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 15px;">
-        ← Volver al Menú Principal
-    </button>
-</div>
-<script>
-    // ... (Tu función sendActionToLua() va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: FUNCIÓN DE CONTROL DE VISTAS
-    // =================================================================
-    const menuMain = document.querySelector('.menu-container'); // Tu menú principal
-    const menuSub = document.getElementById('submenu-opciones'); // Tu submenú
-
-    /**
-     * Muestra la vista de menú especificada y oculta las otras.
-     * @param {string} menuName - Nombre del menú a mostrar ('main' o 'submenu').
-     */
-    function showMenu(menuName) {
-        menuMain.style.display = 'none';
-        menuSub.style.display = 'none';
-
-        if (menuName === 'main') {
-            menuMain.style.display = 'flex';
-        } else if (menuName === 'submenu') {
-            menuSub.style.display = 'flex';
-        }
-        
-        // Aseguramos que el menú se centre si estamos en el modo animado
-        menuMain.style.transform = 'translate(-50%, -50%)'; 
-    }
-    
-    // Por defecto, muestra el menú principal al iniciar (puedes cambiar esto si quieres que empiece oculto)
-    // showMenu('main'); 
-</script>
-<div class="menu-container">
-    <h1>Menú Principal</h1>
-    <p>El juego debe verse borroso detrás de mí.</p>
-    
-    <button onclick="sendActionToLua('ejecutar_accion_uno')" 
-        style="/* ... (los estilos CSS existentes) ... */">
-        Hacer Algo (Ejecuta en Lua)
-    </button>
-    
-    <button onclick="showMenu('submenu')"
-        style="background-color: #17a2b8; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-        Ir a Opciones
-    </button>
-</div>
-<div class="menu-container" id="submenu-opciones" style="display: none;">
-    <h1>Submenú: Opciones</h1>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-        <span>Modo Siempre Día</span>
-        <button id="toggle-dia" onclick="toggleOption('siempre_dia')"
-            style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            OFF
-        </button>
-    </div>
-    <p style="margin-top: 15px;">Usa el botón de atrás para regresar.</p>
-
-    <button onclick="showMenu('main')" 
-        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
-        ← Volver al Menú Principal
-    </button>
-</div>
-<script>
-    // ... (Tu función showMenu() va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: LÓGICA DEL TOGGLE (ON/OFF)
-    // =================================================================
-    let isDiaOn = false;
-
-    /**
-     * Alterna el estado de una opción y notifica a Lua.
-     * @param {string} optionName - El nombre de la opción a cambiar (ej: 'siempre_dia').
-     */
-    function toggleOption(optionName) {
-        // Lógica específica para "Siempre Día"
-        if (optionName === 'siempre_dia') {
-            isDiaOn = !isDiaOn; // Cambia el estado (OFF -> ON o viceversa)
-            const button = document.getElementById('toggle-dia');
-            
-            // 1. Actualiza el aspecto visual del botón
-            button.textContent = isDiaOn ? 'ON' : 'OFF';
-            button.style.backgroundColor = isDiaOn ? '#28a745' : '#dc3545'; // Verde para ON, Rojo para OFF
-
-            // 2. Envía la acción a Lua
-            sendActionToLua('toggle_' + optionName, { estado: isDiaOn });
-        }
-    }
-</script>
-<div class="menu-container" id="submenu-opciones" style="display: none;">
-    <h1>Submenú: Opciones</h1>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-        <span>Modo Siempre Día</span>
-        <button id="toggle-dia" onclick="toggleOption('siempre_dia')"
-            style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            OFF
-        </button>
-    </div>
-
-    <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-        <label for="input-mensaje" style="color: #ccc; margin-bottom: 5px; display: block;">Enviar Mensaje al Chat:</label>
-        <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje aquí..."
-            style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background-color: rgba(0, 0, 0, 0.3); color: white; box-sizing: border-box;">
-        
-        <button onclick="sendChatMessage()"
-            style="width: 100%; background-color: #ffc107; color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-            Enviar Mensaje
-        </button>
-    </div>
-    <p style="margin-top: 15px;">Usa el botón de atrás para regresar.</p>
-
-    <button onclick="showMenu('main')" 
-        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
-        ← Volver al Menú Principal
-    </button>
-</div>
-<script>
-    // ... (Tu función toggleOption() va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: ENVIAR DATOS DE INPUT A LUA
-    // =================================================================
-
-    function sendChatMessage() {
-        const inputField = document.getElementById('input-mensaje');
-        const messageText = inputField.value; // Captura el texto ingresado
-
-        if (messageText.trim() === '') {
-            alert('Por favor, escribe un mensaje.');
-            return;
-        }
-
-        // Usa la función de comunicación existente, pero con un nuevo actionName
-        sendActionToLua('enviar_mensaje_chat', { mensaje: messageText });
-        
-        // Limpiar el campo de entrada después de enviar
-        inputField.value = ''; 
-        
-        // Opcional: Cerrar el submenú o dar un feedback visual
-    }
-</script>
-<div class="menu-container" id="submenu-opciones" style="display: none;">
-    <h1>Submenú: Opciones</h1>
-    
-    <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-        <label for="slider-velocidad" style="color: #ccc; margin-bottom: 5px; display: block;">Velocidad del Jugador: <span id="slider-valor">5.0</span></label>
-        
-        <input type="range" id="slider-velocidad" min="1.0" max="10.0" step="0.5" value="5.0"
-            oninput="updateSliderValue(this.value)"
-            onmouseup="sendSliderValue(this.value)"
-            style="width: 100%; height: 25px; cursor: pointer;">
-    </div>
-    <p style="margin-top: 15px;">Usa el botón de atrás para regresar.</p>
-
-    <button onclick="showMenu('main')" 
-        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
-        ← Volver al Menú Principal
-    </button>
-</div>
-<script>
-    // ... (Tu función sendChatMessage() va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: LÓGICA DEL SLIDER
-    // =================================================================
-
-    /**
-     * Actualiza el valor mostrado junto al slider.
-     * @param {string} value - El valor actual del slider.
-     */
-    function updateSliderValue(value) {
-        document.getElementById('slider-valor').textContent = parseFloat(value).toFixed(1);
-    }
-
-    /**
-     * Envía el valor final del slider a Lua (se activa al soltar el botón).
-     * @param {string} value - El valor final seleccionado en el slider.
-     */
-    function sendSliderValue(value) {
-        const finalValue = parseFloat(value);
-        
-        // Usa la función de comunicación existente, con un nuevo actionName
-        sendActionToLua('ajustar_velocidad', { velocidad: finalValue });
-        
-        console.log(`Velocidad enviada a Lua: ${finalValue}`);
-        // Opcional: Mensaje de confirmación
-    }
-</script>
-<div id="notification-container" style="
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    pointer-events: none; /* Asegura que no bloquee clics */
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-">
-    </div>
-<script>
-    // ... (Tu función sendSliderValue() va aquí) ...
-
-    // =================================================================
-    // CÓDIGO AÑADIDO: SISTEMA DE NOTIFICACIONES (TOAST)
-    // =================================================================
-
-    /**
-     * Muestra una notificación temporal en la esquina de la pantalla.
-     * @param {string} message - El mensaje a mostrar.
-     * @param {string} type - 'success' o 'error'.
-     * @param {number} duration - Duración en milisegundos (ej: 3000ms = 3 segundos).
-     */
-    function showNotification(message, type, duration = 3000) {
-        const container = document.getElementById('notification-container');
-        
-        // Colores y textos basados en el tipo
-        const bgColor = type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)';
-        const titleText = type === 'success' ? 'Éxito' : 'Error';
-
-        // 1. Crear el elemento de notificación
-        const notification = document.createElement('div');
-        notification.innerHTML = `
-            <strong>${titleText}:</strong> ${message}
-        `;
-        
-        // 2. Aplicar estilos de Glassmorphism a la notificación
-        notification.style.cssText = `
-            padding: 12px 18px;
-            border-radius: 8px;
-            color: white;
-            font-family: sans-serif;
-            font-size: 14px;
-            max-width: 300px;
-            /* Estilos Glassmorphism ligeros */
-            background: ${bgColor};
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            /* Animación de entrada */
-            opacity: 0;
-            transform: translateX(100%);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        `;
-        
-        // 3. Añadir al contenedor
-        container.appendChild(notification);
-
-        // 4. Iniciar la animación de entrada
-        setTimeout(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'translateX(0)';
-        }, 50);
-
-        // 5. Iniciar la animación de salida después de la duración
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(100%)';
-            
-            // Eliminar del DOM después de que la animación termine
-            setTimeout(() => {
-                notification.remove();
-            }, 500); 
-        }, duration);
-    }
-</script>
