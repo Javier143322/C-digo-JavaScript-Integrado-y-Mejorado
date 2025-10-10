@@ -176,3 +176,27 @@ AddEventHandler('__cfx_nui:enviar_mensaje_chat', function(data, cb)
     
     cb('ok') -- Confirma a la UI
 end)
+-- =================================================================
+-- CÓDIGO AÑADIDO: CALLBACK PARA RECIBIR VALOR DEL SLIDER
+-- =================================================================
+
+RegisterNuiCallbackType('ajustar_velocidad')
+AddEventHandler('__cfx_nui:ajustar_velocidad', function(data, cb)
+    local velocidadFinal = data.velocidad -- Captura el valor numérico (1.0 a 10.0)
+    local playerPed = PlayerPedId()
+
+    if velocidadFinal then
+        -- Multiplicamos por un factor (ej: 1.5) para que el cambio sea notable
+        local factorVelocidad = velocidadFinal * 1.5
+        
+        -- Aplica el cambio de velocidad a la caminata y carrera del jugador
+        SetRunSpeedMult(playerPed, factorVelocidad)
+        SetMoveSpeedMultiplier(playerPed, factorVelocidad)
+
+        print('----------------------------------------------------')
+        print('Slider Recibido! Ajustando Velocidad a: ' .. factorVelocidad)
+        print('----------------------------------------------------')
+    end
+    
+    cb('ok') -- Confirma a la UI
+end)
