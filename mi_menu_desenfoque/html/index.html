@@ -103,5 +103,31 @@
         });
     }
 </script>
+<style>
+    /* ... (Todo tu código Glassmorphism CSS existente va aquí) ... */
+
+    /* =================================================================
+       CÓDIGO AÑADIDO: ANIMACIONES DE APERTURA/CIERRE
+       ================================================================= */
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    }
+
+    /* Clases para aplicar la animación */
+    .menu-enter {
+        animation: fadeIn 0.3s forwards; /* 'forwards' mantiene el estado final */
+    }
+
+    .menu-exit {
+        animation: fadeOut 0.3s forwards;
+    }
+</style>
 
 
