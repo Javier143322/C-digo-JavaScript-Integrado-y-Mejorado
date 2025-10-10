@@ -77,10 +77,10 @@
     </div>
 
     <div class="menu-container" id="submenu-jugadores" style="display: none;">
-        <h1>Lista de Jugadores (Prueba)</h1>
+        <h1>Lista de Jugadores</h1>
         
         <div id="player-list-container" style="flex-grow: 1; overflow-y: auto; padding: 5px; border: 1px solid rgba(255, 255, 255, 0.2);">
-            <p style="text-align: center; color: #aaa;">Cargando jugadores...</p>
+            <p style="text-align: center; color: #aaa;">Presione 'Actualizar'...</p>
         </div>
         
         <button onclick="requestPlayerList()" 
@@ -98,16 +98,16 @@
     <script src="app.js"></script> 
 
     <script>
-        // Declaramos GetParentResourceName si no existe para que el fetch funcione
+        // Declaramos GetParentResourceName si no existe
         const GetParentResourceName = () => { return 'mi_menú_desenfoque'; };
         
-        // CÓDIGO COMPLETO Y CORREGIDO DE ARRASTRE Y PERSISTENCIA (SIN DUPLICADOS)
+        // CÓDIGO DE ARRASTRE Y PERSISTENCIA (ROBUSTEZ)
         const menu = document.getElementById('menu-principal');
         const STORAGE_KEY = 'menuPosition';
         let isDragging = false;
         let offsetX, offsetY;
         
-        // FUNCIÓN ACTUALIZADA: CARGAR POSICIÓN CON LÍMITES (Robustez)
+        // FUNCIÓN ACTUALIZADA: CARGAR POSICIÓN CON LÍMITES
         function loadPosition() {
             const savedPos = localStorage.getItem(STORAGE_KEY);
             if (savedPos && menu) {
@@ -122,15 +122,12 @@
                 let finalLeft = parseFloat(left);
                 let finalTop = parseFloat(top);
                 
-                // 1. Asegurar que no esté fuera del borde derecho
                 if (finalLeft + menuWidth > screenWidth) {
                     finalLeft = screenWidth - menuWidth - 20; 
                 }
-                // 2. Asegurar que no esté fuera del borde inferior
                 if (finalTop + menuHeight > screenHeight) {
                     finalTop = screenHeight - menuHeight - 20; 
                 }
-                // 3. Asegurar que no esté fuera del borde izquierdo/superior (mínimo 20px)
                 if (finalLeft < 20) { finalLeft = 20; }
                 if (finalTop < 20) { finalTop = 20; }
                 
@@ -138,7 +135,7 @@
                 menu.style.top = finalTop + 'px';
                 // --- FIN DEL CÓDIGO DE LÍMITES ---
                 
-                menu.style.transform = 'none'; // Desactiva el centrado CSS
+                menu.style.transform = 'none'; 
             }
         }
 
@@ -162,7 +159,6 @@
 
             document.addEventListener('mouseup', () => {
                 if (isDragging) {
-                    // FUNCIÓN AÑADIDA: GUARDAR POSICIÓN
                     const currentPos = {
                         left: menu.style.left,
                         top: menu.style.top
@@ -201,11 +197,9 @@
             
             allMenus.forEach(m => { 
                 if(m) {
-                    // Cierre animado si ya estaba abierto
                     if (m.style.display !== 'none') {
                         m.classList.remove('menu-enter');
                         m.classList.add('menu-exit');
-                        // Ocultar después de la animación de cierre
                         setTimeout(() => m.style.display = 'none', 300);
                     } else {
                         m.style.display = 'none';
@@ -220,16 +214,14 @@
                 targetMenu = menuOpciones;
             } else if (menuName === 'jugadores') {
                 targetMenu = menuJugadores;
-                requestPlayerList(); // Pedir lista inmediatamente al abrir
+                requestPlayerList(); 
             }
 
             if (targetMenu) {
                 targetMenu.style.display = 'flex';
-                // Aplicar la animación de entrada
                 targetMenu.classList.remove('menu-exit');
                 targetMenu.classList.add('menu-enter');
                 
-                // Asegurar que el submenú se centre
                 if (menuName !== 'main') {
                     targetMenu.style.transform = 'translate(-50%, -50%)';
                 }
@@ -279,25 +271,18 @@
         }
         
         // =================================================================
-        // LÓGICA DE LISTAS DINÁMICAS (Jugadores)
+        // LÓGICA DE LISTAS DINÁMICAS (Jugadores) - CON TELETRANSPORTE
         // =================================================================
 
-        /**
-         * Le pide a Lua que envíe la tabla de jugadores.
-         */
         function requestPlayerList() {
             sendActionToLua('request_player_data', {});
             document.getElementById('player-list-container').innerHTML = 
                 '<p style="text-align: center; color: #aaa;">Cargando...</p>';
         }
 
-        /**
-         * Dibuja la lista de jugadores recibida desde Lua.
-         * @param {array} playerData - Un array de objetos {id: number, name: string}.
-         */
         window.renderPlayerList = function(playerData) {
             const container = document.getElementById('player-list-container');
-            container.innerHTML = ''; // Limpiar el contenido anterior
+            container.innerHTML = ''; 
 
             if (!playerData || playerData.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #aaa;">No hay jugadores en el rango.</p>';
@@ -307,6 +292,7 @@
             playerData.forEach(player => {
                 const playerItem = document.createElement('div');
                 playerItem.innerHTML = `[ID: ${player.id}] ${player.name} (Ping: ${player.ping || 'N/A'})`;
+                
                 playerItem.style.cssText = `
                     padding: 8px; 
                     margin-bottom: 5px; 
@@ -315,7 +301,9 @@
                     cursor: pointer;
                     transition: background 0.2s;
                 `;
-                // Puedes añadir una acción aquí, ej: playerItem.onclick = () => sendActionToLua('teleport_to', { id: player.id });
+                
+                // Acción al hacer clic: Teletransporte
+                playerItem.onmousedown = () => sendPlayerAction(player.id, player.name);
                 
                 playerItem.addEventListener('mouseover', () => playerItem.style.background = 'rgba(255, 255, 255, 0.2)');
                 playerItem.addEventListener('mouseout', () => playerItem.style.background = 'rgba(255, 255, 255, 0.1)');
@@ -323,9 +311,22 @@
                 container.appendChild(playerItem);
             });
         }
+
+        function sendPlayerAction(playerId, playerName) {
+            sendActionToLua('teleport_to_player', { targetId: playerId });
+            window.showNotification(`Intentando teletransportarse a ${playerName} (ID: ${playerId}).`, 'success', 3000);
+            
+            // Cierra el submenú después de la acción
+            const visibleMenu = document.querySelector('#submenu-jugadores[style*="display: flex"]');
+            if (visibleMenu) {
+                visibleMenu.classList.remove('menu-enter');
+                visibleMenu.classList.add('menu-exit');
+                setTimeout(() => visibleMenu.style.display = 'none', 300);
+            }
+        }
         
         // =================================================================
-        // SISTEMA DE NOTIFICACIONES (showNotification)
+        // SISTEMA DE NOTIFICACIONES
         // =================================================================
         window.showNotification = function(message, type, duration = 3000) {
             const container = document.getElementById('notification-container');
@@ -368,15 +369,14 @@
         }
 
         // =================================================================
-        // GESTIÓN DE ANIMACIONES Y EVENTOS (Listener principal)
+        // GESTIÓN DE ANIMACIONES Y EVENTOS
         // =================================================================
         window.addEventListener('message', function(event) {
             const data = event.data;
             
             if (data.action === 'openMenu') {
-                showMenu('main'); // Abre el menú principal con animación
+                showMenu('main'); 
             } else if (data.action === 'closeMenu') {
-                // Aplica la animación de salida a CUALQUIER menú que esté visible
                 const visibleMenu = document.querySelector('.menu-container[style*="display: flex"]');
                 if (visibleMenu) {
                     visibleMenu.classList.remove('menu-enter');
@@ -387,10 +387,8 @@
                     }, 300);
                 }
             } else if (data.action === 'showNotification') {
-                // Recibe la notificación desde Lua
                 showNotification(data.message, data.type);
             } else if (data.action === 'renderPlayerList') {
-                // Recibe los datos de los jugadores desde Lua y los dibuja
                 if (data.data && window.renderPlayerList) {
                     window.renderPlayerList(data.data);
                 }
