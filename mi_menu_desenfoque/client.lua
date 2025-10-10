@@ -131,3 +131,29 @@ end)
         ← Volver al Menú Principal
     </button>
 </div>
+-- =================================================================
+-- CÓDIGO AÑADIDO: CALLBACK PARA EL TOGGLE DE SIEMPRE DÍA
+-- =================================================================
+
+RegisterNuiCallbackType('toggle_siempre_dia')
+AddEventHandler('__cfx_nui:toggle_siempre_dia', function(data, cb)
+    local estado = data.estado -- Recibe el estado: true (ON) o false (OFF)
+    print('----------------------------------------------------')
+    print('Toggle de Siempre Día: ' .. tostring(estado))
+    print('----------------------------------------------------')
+    
+    if estado then
+        -- Activa el modo Siempre Día
+        Citizen.CreateThread(function()
+            while estado do -- El loop se detiene cuando 'estado' es false
+                Citizen.Wait(0)
+                NetworkOverrideClockTime(12, 0, 0) -- Fija la hora a las 12:00
+            end
+        end)
+    else
+        -- Desactiva el modo Siempre Día
+        ClearOverrideClockTime()
+    end
+    
+    cb('ok') -- Confirma a la UI
+end)
