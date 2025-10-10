@@ -345,4 +345,22 @@
         // Opcional: Cerrar el submenú o dar un feedback visual
     }
 </script>
+<div class="menu-container" id="submenu-opciones" style="display: none;">
+    <h1>Submenú: Opciones</h1>
+    
+    <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <label for="slider-velocidad" style="color: #ccc; margin-bottom: 5px; display: block;">Velocidad del Jugador: <span id="slider-valor">5.0</span></label>
+        
+        <input type="range" id="slider-velocidad" min="1.0" max="10.0" step="0.5" value="5.0"
+            oninput="updateSliderValue(this.value)"
+            onmouseup="sendSliderValue(this.value)"
+            style="width: 100%; height: 25px; cursor: pointer;">
+    </div>
+    <p style="margin-top: 15px;">Usa el botón de atrás para regresar.</p>
+
+    <button onclick="showMenu('main')" 
+        style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
+        ← Volver al Menú Principal
+    </button>
+</div>
 
