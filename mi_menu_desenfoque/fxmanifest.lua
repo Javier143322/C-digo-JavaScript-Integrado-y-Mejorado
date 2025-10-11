@@ -7,7 +7,7 @@ resource_type 'menu' { name = 'Menú NUI Glassmorphism' }
 -- Archivo de interfaz de usuario
 ui_page 'html/index.html'
 
--- Archivos que el navegador de la UI puede acceder (AHORA INCLUYE style.css)
+-- Archivos que el navegador de la UI puede acceder
 files {
     'html/index.html',
     'html/app.js',
