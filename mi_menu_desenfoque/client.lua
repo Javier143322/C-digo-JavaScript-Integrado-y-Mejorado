@@ -151,23 +151,35 @@ AddEventHandler('__cfx_nui:ajustar_velocidad', function(data, cb)
     cb('ok')
 end)
 
--- CALLBACK: LISTA DINÁMICA DE JUGADORES (Recolección de datos real)
+-- CALLBACK: LISTA DINÁMICA DE JUGADORES (FINAL: Recolección de datos con filtro de proximidad)
 RegisterNuiCallbackType('request_player_data')
 AddEventHandler('__cfx_nui:request_player_data', function(data, cb)
     local playersTable = {}
-    
+    local playerPed = PlayerPedId()
+    local playerCoords = GetEntityCoords(playerPed)
+    local maxDistance = 100.0 -- FILTRO: Jugadores en un radio de 100 metros
+
     for _, playerId in ipairs(GetActivePlayers()) do
         local ped = GetPlayerPed(playerId)
         
-        if ped ~= 0 then 
-            local playerName = GetPlayerName(playerId)
-            local playerPing = GetPlayerPing(playerId)
+        -- Evita el jugador local
+        if ped ~= 0 and playerId ~= PlayerId() then 
+            local targetCoords = GetEntityCoords(ped)
             
-            table.insert(playersTable, {
-                id = playerId,
-                name = playerName,
-                ping = playerPing
-            })
+            -- CÁLCULO DE DISTANCIA
+            local distance = GetDistanceBetweenCoords(playerCoords.x, playerCoords.y, playerCoords.z, targetCoords.x, targetCoords.y, targetCoords.z, true)
+            
+            if distance <= maxDistance then
+                local playerName = GetPlayerName(playerId)
+                local playerPing = GetPlayerPing(playerId)
+                
+                table.insert(playersTable, {
+                    id = playerId,
+                    name = playerName,
+                    ping = playerPing,
+                    distance = math.floor(distance) -- Distancia redondeada para mostrar en la UI
+                })
+            end
         end
     end
     
@@ -188,7 +200,8 @@ AddEventHandler('__cfx_nui:teleport_to_player', function(data, cb)
     if DoesEntityExist(targetPed) then
         local coords = GetEntityCoords(targetPed)
         
-        SetEntityCoords(PlayerPedId(), coords.x + 1.0, coords.y + 1.0, coords.z + 1.0, false, false, false, true)
+        -- Ajuste de coordenadas para evitar caer en el suelo
+        SetEntityCoords(PlayerPedId(), coords.x, coords.y, coords.z + 1.5, false, false, false, true)
         
         notifyUI('Teletransporte exitoso.', 'success')
     else
@@ -206,10 +219,9 @@ AddEventHandler('__cfx_nui:uiReady', function(data, cb)
     print('----------------------------------------------------')
     cb('ok')
 end)
--- PEGA ESTE BLOQUE COMPLETO AL FINAL de client.lua
 
 -- =================================================================
--- NUEVO CALLBACK: SINCRONIZACIÓN DE ESTADO INICIAL
+-- NUEVO CALLBACK: SINCRONIZACIÓN DE ESTADO INICIAL (FINAL)
 -- =================================================================
 
 RegisterNuiCallbackType('request_initial_state')
