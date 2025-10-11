@@ -206,3 +206,19 @@ AddEventHandler('__cfx_nui:uiReady', function(data, cb)
     print('----------------------------------------------------')
     cb('ok')
 end)
+-- PEGA ESTE BLOQUE COMPLETO AL FINAL de client.lua
+
+-- =================================================================
+-- NUEVO CALLBACK: SINCRONIZACIÓN DE ESTADO INICIAL
+-- =================================================================
+
+RegisterNuiCallbackType('request_initial_state')
+AddEventHandler('__cfx_nui:request_initial_state', function(data, cb)
+    -- Envía el estado actual del toggle 'Siempre Día' a la UI
+    SendNUIMessage({
+        action = 'updateToggleState',
+        toggleName = 'siempre_dia',
+        estado = isDayModeActive -- La variable global definida al inicio de client.lua
+    })
+    cb('ok')
+end)
