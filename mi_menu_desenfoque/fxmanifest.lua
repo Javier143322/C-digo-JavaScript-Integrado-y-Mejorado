@@ -1,20 +1,27 @@
-fx_version 'bodacious' -- Versión moderna
-games { 'gta5' }
+fx_version 'cerulean'
+game 'gta5'
 
--- Información del recurso (puedes cambiar 'mi_menú_desenfoque' al nombre de tu carpeta)
-resource_type 'menu' { name = 'Menú NUI Glassmorphism' }
+name 'mi_menú_desenfoque'
+author 'TuNombre'
+description 'Sistema de Menú NUI Avanzado con Efectos Blur - Compatible ESX'
+version '2.0.0'
 
--- Archivo de interfaz de usuario
 ui_page 'html/index.html'
 
--- Archivos que el navegador de la UI puede acceder
 files {
     'html/index.html',
+    'html/style.css',
     'html/app.js',
-    'html/style.css', 
+    'config.lua'
 }
 
--- Scripts del cliente (Lógica del juego)
 client_scripts {
+    'config.lua',
     'client.lua'
 }
+
+dependencies {
+    'es_extended'
+}
+
+lua54 'yes'
