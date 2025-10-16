@@ -1,413 +1,188 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Menú FiveM Blur Mejorado</title>
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Menú - FiveM ESX</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <div id="notification-container" style="
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    ">
+    <!-- Sistema de Notificaciones -->
+    <div id="notification-system" class="notification-system"></div>
+
+    <!-- Menú Principal -->
+    <div id="app-container" class="app-container">
+        
+        <div id="menu-principal" class="menu-panel active" data-menu="main">
+            <header class="menu-header" data-draggable="true">
+                <div class="header-title">
+                    <span class="icon">🎮</span>
+                    <div class="title-content">
+                        <h1>Menú Sistema ESX</h1>
+                        <div class="player-info" id="player-info">
+                            <span class="player-name" id="player-name">Cargando...</span>
+                            <span class="player-job" id="player-job">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" onclick="minimizeMenu()" title="Minimizar">
+                        <span class="icon">−</span>
+                    </button>
+                    <button class="btn-icon btn-close" onclick="closeMenu()" title="Cerrar (ESC)">
+                        <span class="icon">×</span>
+                    </button>
+                </div>
+            </header>
+
+            <nav class="menu-nav">
+                <button class="nav-btn active" data-tab="main" onclick="showTab('main')">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Principal</span>
+                </button>
+                <button class="nav-btn" data-tab="players" onclick="showTab('players')">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Jugadores</span>
+                </button>
+                <button class="nav-btn" data-tab="settings" onclick="showTab('settings')">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Ajustes</span>
+                </button>
+            </nav>
+
+            <main class="menu-content">
+                <!-- Pestaña Principal -->
+                <div id="tab-main" class="tab-content active">
+                    <div class="welcome-section">
+                        <div class="welcome-icon">🚀</div>
+                        <h2>Bienvenido al Sistema</h2>
+                        <p class="welcome-text">Controla el entorno del juego con herramientas avanzadas</p>
+                    </div>
+
+                    <div class="quick-actions-grid">
+                        <button class="action-card" onclick="executeAction('ejecutar_accion_uno')">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-content">
+                                <h3>Acción Rápida</h3>
+                                <p>Efecto visual instantáneo</p>
+                            </div>
+                        </button>
+
+                        <button class="action-card" onclick="toggleDayMode()">
+                            <div class="card-icon" id="day-mode-icon">🌙</div>
+                            <div class="card-content">
+                                <h3 id="day-mode-text">Modo Noche</h3>
+                                <p>Control del tiempo</p>
+                            </div>
+                        </button>
+
+                        <button class="action-card" onclick="showTab('players')">
+                            <div class="card-icon">👥</div>
+                            <div class="card-content">
+                                <h3>Gestión Jugadores</h3>
+                                <p>Ver y administrar</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pestaña Jugadores -->
+                <div id="tab-players" class="tab-content">
+                    <div class="tab-header">
+                        <h2>👥 Gestión de Jugadores</h2>
+                        <div class="header-actions">
+                            <button class="btn-refresh" onclick="refreshPlayerList()" title="Actualizar lista">
+                                <span class="icon">🔄</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="players-container">
+                        <div class="list-header">
+                            <span>Jugadores disponibles (100m radio)</span>
+                        </div>
+                        <div id="players-list" class="players-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">👥</div>
+                                <p>No hay jugadores cercanos</p>
+                                <button class="btn-secondary" onclick="refreshPlayerList()">
+                                    Actualizar Lista
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Ajustes -->
+                <div id="tab-settings" class="tab-content">
+                    <div class="tab-header">
+                        <h2>⚙️ Configuración del Sistema</h2>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="setting-section">
+                            <h3 class="section-title">
+                                <span class="icon">🚀</span>
+                                Control de Velocidad
+                            </h3>
+                            
+                            <div class="speed-control">
+                                <div class="speed-display">
+                                    <span class="speed-label">Multiplicador actual:</span>
+                                    <span class="speed-value" id="speed-value">1.0x</span>
+                                </div>
+                                <input type="range" id="speed-slider" min="0.1" max="5.0" step="0.1" value="1.0"
+                                       oninput="updateSpeedDisplay(this.value)"
+                                       class="range-slider">
+                                <button class="btn-apply" onclick="applySpeedMultiplier()">
+                                    Aplicar Velocidad
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setting-section">
+                            <h3 class="section-title">
+                                <span class="icon">💬</span>
+                                Sistema de Chat
+                            </h3>
+                            
+                            <div class="chat-control">
+                                <input type="text" id="chat-message" 
+                                       placeholder="Escribe tu mensaje para el chat global..."
+                                       class="chat-input"
+                                       maxlength="128">
+                                <button class="btn-send" onclick="sendChatMessage()">
+                                    <span class="icon">📤</span>
+                                    Enviar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setting-section">
+                            <h3 class="section-title">
+                                <span class="icon">🎨</span>
+                                Efectos Visuales
+                            </h3>
+                            
+                            <div class="blur-controls">
+                                <button class="blur-option" onclick="setBlurLevel('5px')">
+                                    <span class="blur-label">Bajo</span>
+                                </button>
+                                <button class="blur-option" onclick="setBlurLevel('15px')">
+                                    <span class="blur-label">Medio</span>
+                                </button>
+                                <button class="blur-option" onclick="setBlurLevel('30px')">
+                                    <span class="blur-label">Alto</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
 
-    <div class="menu-container" id="menu-principal">
-        <h1>Menú Principal</h1>
-        <p style="margin-bottom: 20px;">El juego debe verse borroso detrás de mí.</p>
-        
-        <button onclick="sendActionToLua('ejecutar_accion_uno')" 
-            style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 5px;">
-            Hacer Algo (Ejecuta en Lua)
-        </button>
-        
-        <button onclick="showMenu('opciones')"
-            style="background-color: #17a2b8; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-            Ir a Opciones
-        </button>
-
-        <button onclick="showMenu('jugadores')"
-            style="background-color: #3f88c5; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-            Ver Lista de Jugadores
-        </button>
     </div>
 
-    <div class="menu-container" id="submenu-opciones" style="display: none;">
-        <h1>Submenú: Opciones</h1>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-            <span>Modo Siempre Día</span>
-            <button id="toggle-dia" onclick="toggleOption('siempre_dia')"
-                style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                OFF
-            </button>
-        </div>
-
-        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-            <label for="input-mensaje" style="color: #ccc; margin-bottom: 5px; display: block;">Enviar Mensaje al Chat:</label>
-            <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje aquí..."
-                style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background-color: rgba(0, 0, 0, 0.3); color: white; box-sizing: border-box;">
-            
-            <button onclick="sendChatMessage()"
-                style="width: 100%; background-color: #ffc107; color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                Enviar Mensaje
-            </button>
-        </div>
-        
-        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-            <label for="slider-velocidad" style="color: #ccc; margin-bottom: 5px; display: block;">Velocidad del Jugador: <span id="slider-valor">5.0</span></label>
-            
-            <input type="range" id="slider-velocidad" min="1.0" max="10.0" step="0.5" value="5.0"
-                oninput="updateSliderValue(this.value)"
-                onmouseup="sendSliderValue(this.value)"
-                style="width: 100%; height: 25px; cursor: pointer;">
-        </div>
-        
-        <button onclick="showMenu('main')" 
-            style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: auto;">
-            ← Volver al Menú Principal
-        </button>
-    </div>
-
-    <div class="menu-container" id="submenu-jugadores" style="display: none;">
-        <h1>Lista de Jugadores (100m)</h1>
-        
-        <div id="player-list-container" style="flex-grow: 1; overflow-y: auto; padding: 5px; border: 1px solid rgba(255, 255, 255, 0.2);">
-            <p style="text-align: center; color: #aaa;">Presione 'Actualizar'...</p>
-        </div>
-        
-        <button onclick="requestPlayerList()" 
-            style="background-color: #3f88c5; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-            Actualizar Lista
-        </button>
-        
-        <button onclick="showMenu('main')" 
-            style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-            ← Volver al Menú Principal
-        </button>
-    </div>
-
-
-    <script src="app.js"></script> 
-
-    <script>
-        // Declaramos GetParentResourceName si no existe
-        const GetParentResourceName = () => { return 'mi_menú_desenfoque'; };
-        
-        // CÓDIGO DE ARRASTRE Y PERSISTENCIA (ROBUSTEZ)
-        const menu = document.getElementById('menu-principal');
-        const STORAGE_KEY = 'menuPosition';
-        let isDragging = false;
-        let offsetX, offsetY;
-        
-        // FUNCIÓN ACTUALIZADA: CARGAR POSICIÓN CON LÍMITES
-        function loadPosition() {
-            const savedPos = localStorage.getItem(STORAGE_KEY);
-            if (savedPos && menu) {
-                const { left, top } = JSON.parse(savedPos);
-                
-                // --- CÓDIGO: VALIDACIÓN DE LÍMITES ---
-                const menuWidth = menu.offsetWidth;
-                const menuHeight = menu.offsetHeight;
-                const screenWidth = window.innerWidth;
-                const screenHeight = window.innerHeight;
-
-                let finalLeft = parseFloat(left);
-                let finalTop = parseFloat(top);
-                
-                if (finalLeft + menuWidth > screenWidth) {
-                    finalLeft = screenWidth - menuWidth - 20; 
-                }
-                if (finalTop + menuHeight > screenHeight) {
-                    finalTop = screenHeight - menuHeight - 20; 
-                }
-                if (finalLeft < 20) { finalLeft = 20; }
-                if (finalTop < 20) { finalTop = 20; }
-                
-                menu.style.left = finalLeft + 'px';
-                menu.style.top = finalTop + 'px';
-                // --- FIN DEL CÓDIGO DE LÍMITES ---
-                
-                menu.style.transform = 'none'; 
-            }
-        }
-
-        if (menu) {
-            loadPosition();
-
-            menu.addEventListener('mousedown', (e) => {
-                if (e.target.tagName === 'H1') {
-                    isDragging = true;
-                    offsetX = e.clientX - menu.getBoundingClientRect().left;
-                    offsetY = e.clientY - menu.getBoundingClientRect().top;
-                    menu.style.cursor = 'grabbing';
-                }
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                menu.style.left = e.clientX - offsetX + 'px';
-                menu.style.top = e.clientY - offsetY + 'px';
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    const currentPos = {
-                        left: menu.style.left,
-                        top: menu.style.top
-                    };
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPos));
-                }
-                isDragging = false;
-                if (menu) {
-                    menu.style.cursor = 'default';
-                }
-            });
-        }
-        
-        // =================================================================
-        // FUNCIÓN DE COMUNICACIÓN (sendActionToLua)
-        // =================================================================
-        function sendActionToLua(actionName, data = {}) {
-            fetch(`https://${GetParentResourceName()}/${actionName}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json; charset=UTF-8',
-                },
-                body: JSON.stringify(data)
-            });
-        }
-        
-        // =================================================================
-        // FUNCIÓN DE CONTROL DE VISTAS (showMenu) Y ANIMACIÓN
-        // =================================================================
-        const menuPrincipal = document.getElementById('menu-principal');
-        const menuOpciones = document.getElementById('submenu-opciones');
-        const menuJugadores = document.getElementById('submenu-jugadores');
-
-        function showMenu(menuName) {
-            const allMenus = [menuPrincipal, menuOpciones, menuJugadores];
-            
-            allMenus.forEach(m => { 
-                if(m) {
-                    if (m.style.display !== 'none') {
-                        m.classList.remove('menu-enter');
-                        m.classList.add('menu-exit');
-                        setTimeout(() => m.style.display = 'none', 300);
-                    } else {
-                        m.style.display = 'none';
-                    }
-                }
-            });
-            
-            let targetMenu;
-            if (menuName === 'main') {
-                targetMenu = menuPrincipal;
-            } else if (menuName === 'opciones') {
-                targetMenu = menuOpciones;
-            } else if (menuName === 'jugadores') {
-                targetMenu = menuJugadores;
-                requestPlayerList(); 
-            }
-
-            if (targetMenu) {
-                targetMenu.style.display = 'flex';
-                targetMenu.classList.remove('menu-exit');
-                targetMenu.classList.add('menu-enter');
-                
-                if (menuName !== 'main') {
-                    targetMenu.style.transform = 'translate(-50%, -50%)';
-                }
-            }
-        }
-        
-        // =================================================================
-        // LÓGICA DE COMPONENTES: TOGGLE, INPUT, SLIDER
-        // =================================================================
-        let isDiaOn = false;
-
-        function toggleOption(optionName) {
-            if (optionName === 'siempre_dia') {
-                isDiaOn = !isDiaOn;
-                const button = document.getElementById('toggle-dia');
-                
-                button.textContent = isDiaOn ? 'ON' : 'OFF';
-                button.style.backgroundColor = isDiaOn ? '#28a745' : '#dc3545';
-
-                sendActionToLua('toggle_' + optionName, { estado: isDiaOn });
-                showNotification(`Modo Siempre Día ${isDiaOn ? 'ACTIVADO' : 'DESACTIVADO'}.`, 'success', 2000);
-            }
-        }
-
-        function sendChatMessage() {
-            const inputField = document.getElementById('input-mensaje');
-            const messageText = inputField.value;
-
-            if (messageText.trim() === '') {
-                showNotification('El mensaje no puede estar vacío.', 'error', 2000);
-                return;
-            }
-
-            sendActionToLua('enviar_mensaje_chat', { mensaje: messageText });
-            inputField.value = '';
-            showNotification('Mensaje enviado al chat.', 'success', 2000);
-        }
-        
-        function updateSliderValue(value) {
-            document.getElementById('slider-valor').textContent = parseFloat(value).toFixed(1);
-        }
-
-        function sendSliderValue(value) {
-            const finalValue = parseFloat(value);
-            sendActionToLua('ajustar_velocidad', { velocidad: finalValue });
-            showNotification(`Velocidad ajustada a ${finalValue.toFixed(1)}.`, 'success', 2000);
-        }
-        
-        // =================================================================
-        // LÓGICA DE LISTAS DINÁMICAS (Jugadores) - CON TELETRANSPORTE Y PROXIMIDAD
-        // =================================================================
-
-        function requestPlayerList() {
-            sendActionToLua('request_player_data', {});
-            document.getElementById('player-list-container').innerHTML = 
-                '<p style="text-align: center; color: #aaa;">Cargando...</p>';
-        }
-
-        window.renderPlayerList = function(playerData) {
-            const container = document.getElementById('player-list-container');
-            container.innerHTML = ''; 
-
-            if (!playerData || playerData.length === 0) {
-                // Mensaje actualizado para indicar el filtro de proximidad
-                container.innerHTML = '<p style="text-align: center; color: #aaa;">No hay jugadores cerca (radio: 100m).</p>';
-                return;
-            }
-
-            playerData.forEach(player => {
-                const playerItem = document.createElement('div');
-                // Se añade la distancia al innerHTML
-                playerItem.innerHTML = `[ID: ${player.id}] ${player.name} (${player.distance}m) (Ping: ${player.ping || 'N/A'})`;
-                
-                playerItem.style.cssText = `
-                    padding: 8px; 
-                    margin-bottom: 5px; 
-                    background: rgba(255, 255, 255, 0.1); 
-                    border-radius: 5px; 
-                    cursor: pointer;
-                    transition: background 0.2s;
-                `;
-                
-                // Acción al hacer clic: Teletransporte
-                playerItem.onmousedown = () => sendPlayerAction(player.id, player.name);
-                
-                playerItem.addEventListener('mouseover', () => playerItem.style.background = 'rgba(255, 255, 255, 0.2)');
-                playerItem.addEventListener('mouseout', () => playerItem.style.background = 'rgba(255, 255, 255, 0.1)');
-
-                container.appendChild(playerItem);
-            });
-        }
-
-        function sendPlayerAction(playerId, playerName) {
-            sendActionToLua('teleport_to_player', { targetId: playerId });
-            window.showNotification(`Intentando teletransportarse a ${playerName} (ID: ${playerId}).`, 'success', 3000);
-            
-            // Cierra el submenú después de la acción
-            const visibleMenu = document.querySelector('#submenu-jugadores[style*="display: flex"]');
-            if (visibleMenu) {
-                visibleMenu.classList.remove('menu-enter');
-                visibleMenu.classList.add('menu-exit');
-                setTimeout(() => visibleMenu.style.display = 'none', 300);
-            }
-        }
-        
-        // =================================================================
-        // SISTEMA DE NOTIFICACIONES
-        // =================================================================
-        window.showNotification = function(message, type, duration = 3000) {
-            const container = document.getElementById('notification-container');
-            const bgColor = type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)';
-            const titleText = type === 'success' ? 'Éxito' : 'Error';
-
-            const notification = document.createElement('div');
-            notification.innerHTML = `<strong>${titleText}:</strong> ${message}`;
-            
-            notification.style.cssText = `
-                padding: 12px 18px;
-                border-radius: 8px;
-                color: white;
-                font-family: sans-serif;
-                font-size: 14px;
-                max-width: 300px;
-                background: ${bgColor};
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                opacity: 0;
-                transform: translateX(100%);
-                transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-            `;
-            
-            container.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(0)';
-            }, 50);
-
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                
-                setTimeout(() => {
-                    notification.remove();
-                }, 500); 
-            }, duration);
-        }
-
-        // =================================================================
-        // GESTIÓN DE ANIMACIONES Y EVENTOS (Listener principal) - FINAL
-        // =================================================================
-        window.addEventListener('message', function(event) {
-            const data = event.data;
-            
-            if (data.action === 'openMenu') {
-                showMenu('main'); 
-                // Solicita el estado actual del toggle a Lua (MEJORA UX)
-                sendActionToLua('request_initial_state', {}); 
-
-            } else if (data.action === 'closeMenu') {
-                const visibleMenu = document.querySelector('.menu-container[style*="display: flex"]');
-                if (visibleMenu) {
-                    visibleMenu.classList.remove('menu-enter');
-                    visibleMenu.classList.add('menu-exit');
-
-                    setTimeout(() => {
-                        visibleMenu.style.display = 'none';
-                    }, 300);
-                }
-            } else if (data.action === 'showNotification') {
-                showNotification(data.message, data.type);
-            } else if (data.action === 'renderPlayerList') {
-                if (data.data && window.renderPlayerList) {
-                    window.renderPlayerList(data.data);
-                }
-            } else if (data.action === 'updateToggleState') {
-                // LÓGICA MEJORADA: ACTUALIZA EL ESTADO VISUAL DEL BOTÓN
-                if (data.toggleName === 'siempre_dia') {
-                    isDiaOn = data.estado;
-                    const button = document.getElementById('toggle-dia');
-                    
-                    button.textContent = isDiaOn ? 'ON' : 'OFF';
-                    button.style.backgroundColor = isDiaOn ? '#28a745' : '#dc3545';
-                }
-            }
-        });
-    </script> 
+    <script src="app.js"></script>
 </body>
 </html>
