@@ -1,5 +1,5 @@
 // =================================================================
-// APP.JS - VERSIÓN FINAL MEJORADA
+// APP.JS - VERSIÓN MEJORADA CON SISTEMAS AUTÓNOMOS
 // =================================================================
 
 class MenuSystem {
@@ -14,15 +14,26 @@ class MenuSystem {
         this.playerData = {};
         this.players = [];
         
+        // NUEVO: Datos de sistemas autónomos
+        this.economicData = {
+            mercados: {},
+            estadoGeneral: 'neutral',
+            ultimaActualizacion: null
+        };
+        this.activeEvents = [];
+        this.playerStats = {};
+        this.economicUpdateInterval = null;
+        
         this.init();
     }
 
     init() {
         this.setupEventListeners();
         this.setupDragSystem();
+        this.setupEconomicDisplay(); // NUEVO
         this.notifyLuaReady();
         
-        console.log('🚀 Sistema de Menú inicializado');
+        console.log('🚀 Sistema de Menú inicializado con módulos autónomos');
     }
 
     setupEventListeners() {
@@ -80,6 +91,97 @@ class MenuSystem {
         });
     }
 
+    // NUEVO: Sistema de visualización económica
+    setupEconomicDisplay() {
+        const economicBadge = document.createElement('div');
+        economicBadge.className = 'economic-badge';
+        economicBadge.innerHTML = `
+            <div class="market-status" id="market-status">
+                <span class="market-icon">📊</span>
+                <span class="market-text">Cargando economía...</span>
+            </div>
+        `;
+        
+        const header = document.querySelector('.menu-header');
+        if (header) {
+            const titleContent = header.querySelector('.title-content');
+            if (titleContent) {
+                titleContent.appendChild(economicBadge);
+            }
+        }
+
+        // Actualizar datos económicos periódicamente
+        this.startEconomicUpdates();
+    }
+
+    startEconomicUpdates() {
+        // Solicitar datos económicos cada 30 segundos
+        this.economicUpdateInterval = setInterval(() => {
+            if (this.isOpen) {
+                this.callAction('get_economic_data');
+            }
+        }, 30000);
+    }
+
+    updateEconomicDisplay() {
+        const statusElement = document.getElementById('market-status');
+        if (!statusElement) return;
+
+        const icon = statusElement.querySelector('.market-icon');
+        const text = statusElement.querySelector('.market-text');
+        
+        if (!icon || !text) return;
+
+        // Actualizar según el estado general
+        switch(this.economicData.estadoGeneral) {
+            case 'positivo':
+                icon.textContent = '📈';
+                text.textContent = 'Mercados Alcistas';
+                statusElement.className = 'market-status positive';
+                break;
+            case 'negativo':
+                icon.textContent = '📉';
+                text.textContent = 'Mercados Bajistas';
+                statusElement.className = 'market-status negative';
+                break;
+            case 'neutral':
+                icon.textContent = '📊';
+                text.textContent = 'Mercados Estables';
+                statusElement.className = 'market-status neutral';
+                break;
+            default:
+                icon.textContent = '📊';
+                text.textContent = 'Sistema Económico';
+                statusElement.className = 'market-status';
+        }
+
+        // Mostrar tooltip con detalles
+        statusElement.title = this.generateEconomicTooltip();
+    }
+
+    generateEconomicTooltip() {
+        let tooltip = 'Estado de Mercados:\\n';
+        let marketCount = 0;
+        
+        for (const marketName in this.economicData.mercados) {
+            const market = this.economicData.mercados[marketName];
+            tooltip += `\\n${market.nombre}: $${market.precioActual.toLocaleString()} (${market.tendencia})`;
+            marketCount++;
+            
+            if (marketCount >= 3) {
+                tooltip += '\\n...';
+                break;
+            }
+        }
+        
+        if (this.economicData.ultimaActualizacion) {
+            const lastUpdate = new Date(this.economicData.ultimaActualizacion);
+            tooltip += `\\n\\nÚltima actualización: ${lastUpdate.toLocaleTimeString()}`;
+        }
+        
+        return tooltip;
+    }
+
     savePosition() {
         const menu = document.getElementById('menu-principal');
         if (menu) {
@@ -126,9 +228,17 @@ class MenuSystem {
         
         this.currentTab = tabName;
 
-        // Acciones específicas
-        if (tabName === 'players') {
-            this.refreshPlayerList();
+        // Acciones específicas por pestaña
+        switch(tabName) {
+            case 'players':
+                this.refreshPlayerList();
+                break;
+            case 'economy': // NUEVO: Pestaña economía
+                this.refreshEconomicData();
+                break;
+            case 'stats': // NUEVO: Pestaña estadísticas
+                this.refreshPlayerStats();
+                break;
         }
     }
 
@@ -146,6 +256,8 @@ class MenuSystem {
         
         // Solicitar datos iniciales
         this.callAction('get_player_info');
+        this.callAction('get_economic_data'); // NUEVO
+        this.callAction('get_player_stats'); // NUEVO
     }
 
     close() {
@@ -195,7 +307,7 @@ class MenuSystem {
     }
 
     // =================================================================
-    // MANEJO DE MENSAJES NUI
+    // MANEJO DE MENSAJES NUI (ACTUALIZADO)
     // =================================================================
 
     handleNuiMessage(data) {
@@ -234,6 +346,19 @@ class MenuSystem {
                 case 'updateJob':
                     this.updateJob(data.job, data.grade);
                     break;
+
+                // NUEVO: Manejo de datos de sistemas autónomos
+                case 'updateEconomicData':
+                    this.updateEconomicData(data.data);
+                    break;
+
+                case 'updatePlayerStats':
+                    this.updatePlayerStats(data.stats);
+                    break;
+
+                case 'notificarEvento':
+                    this.showEventNotification(data.evento);
+                    break;
             }
         } catch (error) {
             console.error('Error procesando mensaje NUI:', error);
@@ -241,7 +366,206 @@ class MenuSystem {
     }
 
     // =================================================================
-    // SISTEMA DE JUGADORES
+    // NUEVO: SISTEMA ECONÓMICO EN INTERFAZ
+    // =================================================================
+
+    updateEconomicData(economicData) {
+        this.economicData = economicData;
+        this.updateEconomicDisplay();
+        
+        // Actualizar pestaña de economía si está activa
+        if (this.currentTab === 'economy') {
+            this.renderEconomicData();
+        }
+    }
+
+    renderEconomicData() {
+        const economyTab = document.getElementById('tab-economy');
+        if (!economyTab) return;
+
+        let html = `
+            <div class="tab-header">
+                <h2>💰 Mercados Económicos</h2>
+                <div class="header-actions">
+                    <button class="btn-refresh" onclick="menuSystem.refreshEconomicData()" title="Actualizar mercados">
+                        <span class="icon">🔄</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="economic-overview">
+                <div class="overview-card ${this.economicData.estadoGeneral}">
+                    <div class="overview-icon">${this.getEconomicIcon()}</div>
+                    <div class="overview-content">
+                        <h3>Estado General</h3>
+                        <p class="overview-status">${this.getEconomicStatusText()}</p>
+                        <small>Última actualización: ${new Date().toLocaleTimeString()}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="markets-grid">
+        `;
+
+        for (const marketName in this.economicData.mercados) {
+            const market = this.economicData.mercados[marketName];
+            html += this.renderMarketCard(market);
+        }
+
+        html += `
+            </div>
+            
+            <div class="economic-events">
+                <h3 class="section-title">📊 Eventos Económicos Activos</h3>
+                <div class="events-list">
+                    ${this.renderActiveEvents()}
+                </div>
+            </div>
+        `;
+
+        economyTab.innerHTML = html;
+    }
+
+    renderMarketCard(market) {
+        const trendIcon = market.tendencia === 'alcista' ? '📈' : 
+                         market.tendencia === 'bajista' ? '📉' : '➡️';
+        
+        const trendClass = market.tendencia === 'alcista' ? 'positive' : 
+                          market.tendencia === 'bajista' ? 'negative' : 'neutral';
+
+        return `
+            <div class="market-card ${trendClass}">
+                <div class="market-header">
+                    <span class="market-name">${this.capitalizeFirst(market.nombre)}</span>
+                    <span class="market-trend ${trendClass}">${trendIcon} ${market.tendencia}</span>
+                </div>
+                <div class="market-price">$${market.precioActual.toLocaleString()}</div>
+                <div class="market-details">
+                    <small>Base: $${market.precioBase.toLocaleString()}</small>
+                    <small>Volatilidad: ${(market.volatilidad * 100).toFixed(1)}%</small>
+                </div>
+            </div>
+        `;
+    }
+
+    renderActiveEvents() {
+        if (this.activeEvents.length === 0) {
+            return '<div class="empty-state"><div class="empty-icon">⚡</div><p>No hay eventos activos</p></div>';
+        }
+
+        return this.activeEvents.map(event => `
+            <div class="event-item">
+                <span class="event-icon">🎯</span>
+                <div class="event-content">
+                    <strong>${this.formatEventName(event.tipo)}</strong>
+                    <small>${event.timestamp}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    getEconomicIcon() {
+        switch(this.economicData.estadoGeneral) {
+            case 'positivo': return '📈';
+            case 'negativo': return '📉';
+            default: return '📊';
+        }
+    }
+
+    getEconomicStatusText() {
+        switch(this.economicData.estadoGeneral) {
+            case 'positivo': return 'Mercados en crecimiento';
+            case 'negativo': return 'Mercados en corrección';
+            default: return 'Mercados estables';
+        }
+    }
+
+    refreshEconomicData() {
+        this.callAction('get_economic_data');
+        this.showNotification('Actualizando datos económicos...', 'info');
+    }
+
+    // =================================================================
+    // NUEVO: SISTEMA DE ESTADÍSTICAS EN INTERFAZ
+    // =================================================================
+
+    updatePlayerStats(stats) {
+        this.playerStats = stats;
+        
+        if (this.currentTab === 'stats') {
+            this.renderPlayerStats();
+        }
+    }
+
+    renderPlayerStats() {
+        const statsTab = document.getElementById('tab-stats');
+        if (!statsTab) return;
+
+        const stats = this.playerStats;
+        
+        statsTab.innerHTML = `
+            <div class="tab-header">
+                <h2>📊 Estadísticas de Uso</h2>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🚪</div>
+                    <div class="stat-content">
+                        <h3>${stats.menuOpens || 0}</h3>
+                        <p>Aperturas de Menú</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-content">
+                        <h3>${stats.actionsPerformed || 0}</h3>
+                        <p>Acciones Realizadas</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🔀</div>
+                    <div class="stat-content">
+                        <h3>${stats.playersTeleported || 0}</h3>
+                        <p>Teletransportes</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💬</div>
+                    <div class="stat-content">
+                        <h3>${stats.chatMessagesSent || 0}</h3>
+                        <p>Mensajes Chat</p>
+                    </div>
+                </div>
+            </div>
+
+            ${stats.lastAction ? `
+                <div class="recent-activity">
+                    <h3 class="section-title">Última Actividad</h3>
+                    <div class="activity-item">
+                        <span class="activity-type">${this.formatActionName(stats.lastAction.tipo)}</span>
+                        <span class="activity-time">${stats.lastAction.timestamp}</span>
+                    </div>
+                </div>
+            ` : ''}
+
+            ${stats.firstUse ? `
+                <div class="usage-info">
+                    <small>Primer uso: ${stats.firstUse}</small>
+                </div>
+            ` : ''}
+        `;
+    }
+
+    refreshPlayerStats() {
+        this.callAction('get_player_stats');
+    }
+
+    // =================================================================
+    // SISTEMA DE JUGADORES (ORIGINAL)
     // =================================================================
 
     refreshPlayerList() {
@@ -295,7 +619,7 @@ class MenuSystem {
     }
 
     // =================================================================
-    // SISTEMA DE CONFIGURACIÓN
+    // SISTEMA DE CONFIGURACIÓN (ORIGINAL)
     // =================================================================
 
     updateInitialState(data) {
@@ -313,6 +637,19 @@ class MenuSystem {
                 this.settings.speedMultiplier = data.settings.speedMultiplier;
                 this.updateSpeedDisplay();
             }
+        }
+
+        // NUEVO: Cargar datos de sistemas autónomos
+        if (data.economicData) {
+            this.updateEconomicData(data.economicData);
+        }
+        
+        if (data.activeEvents) {
+            this.activeEvents = data.activeEvents;
+        }
+        
+        if (data.playerStats) {
+            this.updatePlayerStats(data.playerStats);
         }
     }
 
@@ -333,7 +670,6 @@ class MenuSystem {
     }
 
     updateMoney(amount) {
-        // Actualizar dinero en la UI si es necesario
         console.log('Dinero actualizado:', amount);
     }
 
@@ -423,7 +759,31 @@ class MenuSystem {
     }
 
     // =================================================================
-    // SISTEMA DE NOTIFICACIONES
+    // NUEVO: SISTEMA DE NOTIFICACIONES DE EVENTOS
+    // =================================================================
+
+    showEventNotification(evento) {
+        const message = this.formatEventNotification(evento);
+        this.showNotification(message, 'info', 7000);
+    }
+
+    formatEventNotification(evento) {
+        switch(evento.tipo) {
+            case 'boom_immobiliario':
+                return '🏠 BOOM INMOBILIARIO: Precios de propiedades +20%!';
+            case 'crisis_combustible':
+                return '⛽ CRISIS COMBUSTIBLE: Precios de vehículos +15%!';
+            case 'tecnologia_avance':
+                return '💻 AVANCE TECNOLÓGICO: Recursos más accesibles!';
+            case 'mercado_estable':
+                return '📊 MERCADO ESTABLE: Precios normalizados!';
+            default:
+                return `⚡ Evento: ${evento.tipo}`;
+        }
+    }
+
+    // =================================================================
+    // SISTEMA DE NOTIFICACIONES (ORIGINAL)
     // =================================================================
 
     showNotification(message, type = 'info', duration = 5000) {
@@ -455,7 +815,7 @@ class MenuSystem {
     }
 
     // =================================================================
-    // UTILIDADES
+    // UTILIDADES (ACTUALIZADAS)
     // =================================================================
 
     escapeHtml(unsafe) {
@@ -465,6 +825,31 @@ class MenuSystem {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    capitalizeFirst(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    formatEventName(eventType) {
+        const names = {
+            'boom_immobiliario': 'Boom Inmobiliario',
+            'crisis_combustible': 'Crisis de Combustible', 
+            'tecnologia_avance': 'Avance Tecnológico',
+            'mercado_estable': 'Mercado Estable'
+        };
+        return names[eventType] || eventType;
+    }
+
+    formatActionName(actionType) {
+        const names = {
+            'ejecutar_accion_uno': 'Acción Rápida',
+            'toggle_siempre_dia': 'Modo Día/Noche',
+            'enviar_mensaje_chat': 'Mensaje Chat',
+            'ajustar_velocidad': 'Ajuste Velocidad',
+            'teleport_to_player': 'Teletransporte'
+        };
+        return names[actionType] || actionType;
     }
 
     loadSettings() {
@@ -486,7 +871,7 @@ class MenuSystem {
 }
 
 // =================================================================
-// INICIALIZACIÓN Y FUNCIONES GLOBALES
+// INICIALIZACIÓN Y FUNCIONES GLOBALES (ACTUALIZADAS)
 // =================================================================
 
 let menuSystem;
@@ -528,6 +913,15 @@ function executeAction(action) {
     if (menuSystem) menuSystem.executeAction(action);
 }
 
+// NUEVAS: Funciones para sistemas autónomos
+function refreshEconomicData() {
+    if (menuSystem) menuSystem.refreshEconomicData();
+}
+
+function refreshPlayerStats() {
+    if (menuSystem) menuSystem.refreshPlayerStats();
+}
+
 function closeMenu() {
     if (menuSystem) menuSystem.close();
 }
@@ -541,4 +935,4 @@ if (typeof GetParentResourceName === 'undefined') {
     window.GetParentResourceName = () => 'mi_menú_desenfoque';
 }
 
-console.log('✅ Interfaz de usuario cargada correctamente');
+console.log('✅ Interfaz de usuario cargada con sistemas autónomos');
