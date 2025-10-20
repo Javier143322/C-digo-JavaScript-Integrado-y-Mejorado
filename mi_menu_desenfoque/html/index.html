@@ -23,6 +23,7 @@
                             <span class="player-name" id="player-name">Cargando...</span>
                             <span class="player-job" id="player-job">-</span>
                         </div>
+                        <!-- NUEVO: Badge económico se inserta aquí via JavaScript -->
                     </div>
                 </div>
                 <div class="header-actions">
@@ -43,6 +44,15 @@
                 <button class="nav-btn" data-tab="players" onclick="showTab('players')">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Jugadores</span>
+                </button>
+                <!-- NUEVO: Pestañas de sistemas autónomos -->
+                <button class="nav-btn" data-tab="economy" onclick="showTab('economy')">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">Economía</span>
+                </button>
+                <button class="nav-btn" data-tab="stats" onclick="showTab('stats')">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Estadísticas</span>
                 </button>
                 <button class="nav-btn" data-tab="settings" onclick="showTab('settings')">
                     <span class="nav-icon">⚙️</span>
@@ -83,6 +93,23 @@
                                 <p>Ver y administrar</p>
                             </div>
                         </button>
+
+                        <!-- NUEVO: Acciones para sistemas autónomos -->
+                        <button class="action-card" onclick="showTab('economy')">
+                            <div class="card-icon">💰</div>
+                            <div class="card-content">
+                                <h3>Mercados</h3>
+                                <p>Estado económico</p>
+                            </div>
+                        </button>
+
+                        <button class="action-card" onclick="showTab('stats')">
+                            <div class="card-icon">📊</div>
+                            <div class="card-content">
+                                <h3>Estadísticas</h3>
+                                <p>Tus datos de uso</p>
+                            </div>
+                        </button>
                     </div>
                 </div>
 
@@ -110,6 +137,30 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- NUEVO: Pestaña Economía -->
+                <div id="tab-economy" class="tab-content">
+                    <!-- Se llena dinámicamente via JavaScript -->
+                    <div class="empty-state">
+                        <div class="empty-icon">💰</div>
+                        <p>Cargando datos económicos...</p>
+                        <button class="btn-secondary" onclick="refreshEconomicData()">
+                            Actualizar Datos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NUEVO: Pestaña Estadísticas -->
+                <div id="tab-stats" class="tab-content">
+                    <!-- Se llena dinámicamente via JavaScript -->
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <p>Cargando estadísticas...</p>
+                        <button class="btn-secondary" onclick="refreshPlayerStats()">
+                            Actualizar Stats
+                        </button>
                     </div>
                 </div>
 
